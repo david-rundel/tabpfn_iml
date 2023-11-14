@@ -56,7 +56,7 @@ from tabpfniml import ICE_PD
 
 # Datasets
 
-A new dataset instance that inherits from the `dataset_iml` class must be instantiated in order to apply the IML methods. Essentially you only need to define the `__init__()` function and please refer to `demo/consulting_datasets/datasets.py` for the structure and necessary variables. The datasets needs to be a *.csv* file and the first columns needs to be the target and the other colums the features. Categorical features need to be already converted to integer or float values, e.g., by label encoding.
+A new dataset instance that inherits from the `dataset_iml` class must be instantiated in order to apply the IML methods. Essentially, you only need to define the `__init__()` function and please refer to `demo/consulting_datasets/datasets.py` for the structure and necessary variables. The datasets needs to be a *.csv* file and the first columns needs to be the target and the other colums the features. Categorical features need to be already converted to integer or float values, e.g., by label encoding.
 
 ```python
 from tabpfniml import dataset_iml
