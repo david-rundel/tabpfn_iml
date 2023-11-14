@@ -47,7 +47,7 @@ pip install dist/tabpfniml-0.0.1.tar.gz
 If it doesn't work (due to Python PATH conflicts), use:
 
 ```shell
-/Users/<username>/miniconda3/envs/package_test/bin/pip install /Users/<username>/<path_to_repo>/tabpfn_iml_biomechanics/dist/tabpfniml-0.0.1.tar.gz
+/Users/<username>/miniconda3/envs/package_test/bin/pip install /Users/<username>/<path_to_repo>/tabpfn_iml/dist/tabpfniml-0.0.1.tar.gz
 ```
 After successful installation, you can import methods from the package like this:
 ```python
