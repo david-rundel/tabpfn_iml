@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tabpfniml"
-version = "0.1"
+version = "0.0.1"
 authors = [
   { name="Constantin von Crailsheim", email="C.Crailsheim@campus.lmu.de" },
   { name="David Rundel", email="david.rundel@campus.lmu.de" },
@@ -37,4 +37,4 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/constantin-crailsheim/tabpfn_iml_biomechanics"
+"Homepage" = "https://github.com/david-rundel/tabpfn_iml"
