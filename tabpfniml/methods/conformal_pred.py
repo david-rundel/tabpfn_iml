@@ -7,6 +7,7 @@ from mapie.classification import MapieClassifier
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import matplotlib.lines as mlines
 from typing import Optional
 import os
 from datetime import datetime
@@ -197,6 +198,12 @@ class Conformal_Prediction(TabPFN_Interpret):
         else:
             raise ValueError("The number of alphas is not between 1 and 3.")
 
+        unique_labels = np.unique(y_pred.astype(int))
+        colors = plt.cm.viridis(np.linspace(0, 1, len(unique_labels)))
+
+        legend_handles = [mlines.Line2D([], [], color=colors[i], marker='.', linestyle='None',
+                                markersize=10, label=label) for i, label in enumerate(unique_labels)]
+
         axs[0].scatter(
             X[:, x_axis],
             X[:, y_axis],
@@ -207,6 +214,7 @@ class Conformal_Prediction(TabPFN_Interpret):
             alpha=0.4
         )
         axs[0].set_title("Predicted labels")
+        axs[0].legend(handles=legend_handles, title="Labels", loc='lower right')
 
         for i, alpha in enumerate(alphas):
             y_set_sums = y_set[:, :, i].sum(axis=1)
