@@ -222,20 +222,21 @@ class DCA(TabPFN_Interpret):
             """
 
             modelnames = plot_df["model"].value_counts().index
+            color_names = sns.color_palette('husl', n_colors=len(modelnames))
             for modelname, color_name in zip(modelnames, color_names):
                 single_model_df = plot_df[plot_df["model"] == modelname]
                 sns.lineplot(x='threshold', y='net_benefit',
-                             data=single_model_df, color=color_name)
-                plt.ylim(y_limits)
-                plt.xlim(0, 1)
-                plt.legend(modelnames)
-                plt.grid(
-                    color='black',
-                    which="both",
-                    axis="both",
-                    linewidth="0.3")
-                plt.xlabel("Threshold Values")
-                plt.ylabel("Net Benefit")
+                             data=single_model_df, color=color_name, label=modelname)
+            plt.ylim(y_limits)
+            plt.xlim(0, 1)
+            plt.legend()
+            plt.grid(
+                color='black',
+                which="both",
+                axis="both",
+                linewidth="0.3")
+            plt.xlabel("Threshold Values")
+            plt.ylabel("Net Benefit")
             plt.title("Net Benefit Curves")
 
             if save_to_dir:
@@ -279,13 +280,6 @@ class DCA(TabPFN_Interpret):
                     " net_intervention_avoided"
                 )
 
-            modelnames = plot_df["model"].value_counts().index
-            if len(color_names) < len(modelnames):
-                raise ValueError(
-                    "More predictors than color_names, please enter more color names"
-                    " in color_names list and try again"
-                )
-
             if graph_type == "net_benefit":
                 _plot_net_benefit(
                     plot_df=plot_df, y_limits=y_limits, color_names=color_names)
@@ -294,7 +288,7 @@ class DCA(TabPFN_Interpret):
             plot_df=dca_risks,
             graph_type="net_benefit",
             y_limits=y_limits,
-            color_names=colors[:len(predictors) + 3]
+            color_names=None
         )
 
         ##############################################################
