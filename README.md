@@ -24,6 +24,10 @@ This package provides the following methods:
 ### Feature Importance Methods:
 - Leave-One-Covariate-Out (LOCO) (global)
 - Shapley Additive Global Importances (SAGE) (global)
+### Data Valuation Methods:
+- Leave-One-Out (LOO) (global)
+- Sensitivity Analysis (global)
+- Data Shapley (with Kernel SHAP) (global)
 ### Local Explanations:
 - Counterfactual Explanations (CE) (local)
 ### Clinical value assessment & Uncertainty quantification:
