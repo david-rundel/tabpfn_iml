@@ -177,8 +177,8 @@ class Sensitivity(TabPFN_Interpret):
                     X_test_grads = torch.nan_to_num(
                         temp_grads["X_test"].squeeze()[i, :], nan=0)
                     temp_FE = pd.Series(X_test_grads.numpy()).abs()
-                    self.FE_local = self.FE_local.append(
-                        temp_FE, ignore_index=True)
+                    self.FE_local = pd.concat([self.FE_local, pd.DataFrame([temp_FE])],
+                                              ignore_index=True)
 
                 if self.compute_wrt_observation:
                     # Sensitivity as Observation Effects (OE_local)
@@ -187,8 +187,8 @@ class Sensitivity(TabPFN_Interpret):
                     sensitivity_x_train = torch.norm(X_train_grads, p=2, dim=1)
                     # Always positive due to norm.
                     temp_OE = pd.Series(sensitivity_x_train.numpy()).abs()
-                    self.OE_local = self.OE_local.append(
-                        temp_OE, ignore_index=True)
+                    self.OE_local = pd.concat([self.OE_local, pd.DataFrame([temp_OE])],
+                                              ignore_index=True)
                     # / temp_OE.sum() => Do not divide gradients by denominator, because otherwise every observation gets the same weight again
                     # But we want gradients per observation to have different weights depending on whether the classification was correct or not
 
@@ -201,8 +201,8 @@ class Sensitivity(TabPFN_Interpret):
                         temp_grads["X_test"].squeeze()[i, :], nan=0)
                     # Always positive since FI measure (intensity of effect on loss more important than direction)
                     temp_FI = pd.Series(X_test_grads.numpy()).abs()
-                    self.FI_local = self.FI_local.append(
-                        temp_FI, ignore_index=True)
+                    self.FI_local = pd.concat([self.FI_local, pd.DataFrame([temp_FI])],
+                                              ignore_index=True)
 
                 if self.compute_wrt_observation:
                     # Sensitivity as Observation Importance (OI_local)
@@ -211,8 +211,8 @@ class Sensitivity(TabPFN_Interpret):
                     # Always positive due to norm.
                     sensitivity_x_train = torch.norm(X_train_grads, p=2, dim=1)
                     temp_OI = pd.Series(sensitivity_x_train.numpy()).abs()
-                    self.OI_local = self.OI_local.append(
-                        temp_OI, ignore_index=True)
+                    self.OI_local = pd.concat([self.OI_local, pd.DataFrame([temp_OI])],
+                                              ignore_index=True)
 
         # Rename columns
         if self.pred_based:
@@ -483,8 +483,9 @@ class Sensitivity(TabPFN_Interpret):
                     "If the dataframe is to big, prune it to ensure that it can be plotted properly.")
                 plot_data = plot_data.iloc[:8, :32]
 
-            plot_data = plot_data.append(global_df, ignore_index=True).rename(
-                index={plot_data.shape[0]: 'Global'})
+            plot_data = pd.concat([plot_data, global_df], ignore_index=True)
+            last_index = len(plot_data) - 1
+            plot_data = plot_data.rename(index={last_index: 'Global'})
             plot_data.columns = [col[8:] for col in plot_data.columns]
 
             ax = sns.heatmap(plot_data,
