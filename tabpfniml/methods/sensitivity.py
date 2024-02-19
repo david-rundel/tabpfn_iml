@@ -249,7 +249,8 @@ class Sensitivity(TabPFN_Interpret):
                save_to_path: Optional[str] = None) -> Union[pd.Series, pd.DataFrame]:
         """
         Return estimates of Sensitivity FI values from the fit()-function.
-        Sensitivity FI values esimate the sensitivity of the predictive performace on features. Sensitivity FI values are always positive.
+        Sensitivity FI values esimate the sensitivity of the predictive performace on features. 
+        Sensitivity FI values are always positive.
 
         Args:
             local (bool, optional): Whether to average the results across test-samples. Defaults to False.
@@ -340,7 +341,8 @@ class Sensitivity(TabPFN_Interpret):
                save_to_path: Optional[str] = None) -> Union[pd.Series, pd.DataFrame]:
         """
         Return estimates of Sensitivity OI values from the fit()-function.
-        Sensitivity OI values esimate the sensitivity of the predictive performance on training observations. Sensitivity OI values are always positive.
+        Sensitivity OI values esimate the sensitivity of the predictive performance on training observations. 
+        Sensitivity OI values are always positive.
 
         Args:
             local (bool, optional): Whether to average the results across test-samples. Defaults to False.
@@ -384,7 +386,8 @@ class Sensitivity(TabPFN_Interpret):
                save_to_path: Optional[str] = None) -> Union[pd.Series, pd.DataFrame]:
         """
         Return estimates of Sensitivity OE values from the fit()-function.
-        Sensitivity OE values estimate the sensitivity of the predictions on training observations. Sensitivity OE values are always positive.
+        Sensitivity OE values estimate the sensitivity of the predictions on training observations. 
+        Sensitivity OE values are always positive.
 
         Args:
             local (bool, optional): Whether to average the results across test-samples. Defaults to False.
@@ -461,9 +464,11 @@ class Sensitivity(TabPFN_Interpret):
                     local_df = self.FI_local
                     global_df = self.FI_global
                 else:
-                    colorbar_label = "Prediction Sensitivity (FE)"
-                    local_df = self.FE_local
-                    global_df = self.FE_global
+                    raise Exception(
+                        "Heatmaps can not be plotted for FE, since they also contain negative values.")
+                    # colorbar_label = "Prediction Sensitivity (FE)"
+                    # local_df = self.FE_local
+                    # global_df = self.FE_global
                 plot_title = "Local and global " + colorbar_label + " per feature"
 
             plot_data = local_df
@@ -536,7 +541,7 @@ class Sensitivity(TabPFN_Interpret):
                     ylabel = "Loss abs. Gradient"
                     local_df = self.FI_local
                 else:
-                    ylabel = "Prediction abs. Gradient"
+                    ylabel = "Prediction Gradient"
                     local_df = self.FE_local
                 plot_title = "Local " + ylabel + " per feature"
 
@@ -552,19 +557,27 @@ class Sensitivity(TabPFN_Interpret):
 
             plot_data_melt = pd.melt(plot_data)
             medians = plot_data_melt.groupby('variable')['value'].median()
-            plot_data_melt = plot_data_melt.merge(medians, left_on='variable', right_index=True, suffixes= ('', '_median'))
-            plot_data_melt = plot_data_melt.sort_values(by= "value_median")
+            plot_data_melt = plot_data_melt.merge(
+                medians, left_on='variable', right_index=True, suffixes=('', '_median'))
+            plot_data_melt = plot_data_melt.sort_values(by="value_median")
 
-            palette = sns.color_palette(
-                "ch:s=.25,rot=-.25", n_colors=len(medians))
-            colors = pd.Series(
-                palette, index=medians.sort_values(ascending=False).index)
+            # sort means in ascending order and assign a color palette
+            if not plot_wrt_observation and plot_pred_based:
+                palette = sns.diverging_palette(
+                    10, 220, n=len(medians), sep=50)
+                colors = pd.Series(
+                    palette, index=medians.sort_values(ascending=True).index)
+            else:
+                palette = sns.color_palette(
+                    "ch:s=.25,rot=-.25", n_colors=len(medians))
+                colors = pd.Series(
+                    palette, index=medians.sort_values(ascending=False).index)
 
             ax = sns.boxplot(x='variable',
                              y='value',
                              data=plot_data_melt,
                              palette=dict(colors),
-                             showfliers= False)
+                             showfliers=False)
             plt.xlabel(xlabel)
             plt.ylabel(ylabel)
             plt.title(plot_title)
@@ -618,10 +631,10 @@ class Sensitivity(TabPFN_Interpret):
 
             x_label = "Sensitivity of " + name_dep + " w.r.t " + name_indep
 
-            hist_df= pd.DataFrame(global_data, columns=[x_label])
-            hist_df= hist_df[np.isfinite(hist_df[x_label])]
+            hist_df = pd.DataFrame(global_data, columns=[x_label])
+            hist_df = hist_df[np.isfinite(hist_df[x_label])]
 
-            sns.histplot(data= hist_df,
+            sns.histplot(data=hist_df,
                          x=x_label,
                          bins=bins,
                          kde=False,
