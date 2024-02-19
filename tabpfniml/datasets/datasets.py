@@ -2,10 +2,12 @@ from abc import ABC, abstractmethod
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 from typing import Optional, Union, Tuple
 import torch
 from pathlib import Path
 import os
+import openml
 
 class dataset_iml(ABC):
     """
@@ -204,8 +206,46 @@ class dataset_iml(ABC):
 
 
 class OpenMLData(dataset_iml):
-    def __init__(self, name, X, y, categorical_features_idx, feature_names):
+    def __init__(self, openml_id: int= 1):
+        def fetch_openml_dataset(did):
+            """
+            Helper-Method:
+            Fetches a single dataset from OpenML by its ID.
+
+            Restricted to array-datasets.
+            
+            Args:
+            - did: Dataset ID on OpenML.
+            
+            Returns:
+            - A tuple containing the dataset name, features (X), target variable (y),
+            indices of categorical features, and feature names.
+            """
+            dataset = openml.datasets.get_dataset(did)
+            X, y, categorical_indicator, attribute_names = dataset.get_data(
+                target=dataset.default_target_attribute,
+                dataset_format='array')
+            
+            #Shuffle data (some OpenML datasets exhibit long sequences with identical label)
+            shuffle_indices = np.random.permutation(len(y))
+            X = X[shuffle_indices]
+            y = y[shuffle_indices]
+            
+            if X.shape[0] > 1024:
+                X, _, y, _ = train_test_split(X, y, train_size=1024, stratify=y, random_state=42)
+            
+            # Find indices of categorical features
+            categorical_features_idx = [i for i, is_categorical in enumerate(categorical_indicator) if is_categorical]
+
+            le = LabelEncoder()
+            y = le.fit_transform(y)
+            
+            return dataset.name, X, y, categorical_features_idx, attribute_names
+
+
         # Set attributes directly without relying on a file path
+        name, X, y, categorical_features_idx, feature_names= fetch_openml_dataset(openml_id)
+
         self.id = 1
        
         self.df = pd.DataFrame(X, columns=feature_names)
@@ -243,4 +283,3 @@ class OpenMLData(dataset_iml):
 
         # No need to call super().__init__() as we're directly initializing everything here
         # The original intent of calling super().__init__() was to load and process the file, which we've bypassed
-        

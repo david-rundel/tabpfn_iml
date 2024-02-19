@@ -26,7 +26,7 @@ class SHAP(TabPFN_Interpret):
     prediction is estimated and not just the surplus contribution of one feature.
 
     Compared to the SHAP-package from Scott Lundberg (iml/methods/shap_package.py, https://shap.readthedocs.io/en/latest/index.html) it does not offer 
-    a big variety of plots, however it is designed to be more performant in combination with TabPFN.
+    a big variety of plots, however it is designed to be more exact and performant in combination with TabPFN.
     While the SHAP-package predicts for each test sample and feature coalition separately, this implementation iterates over feature coalitions 
     and predicts for all test samples at once.
 
