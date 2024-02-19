@@ -201,3 +201,46 @@ class dataset_iml(ABC):
         except:
             raise Exception("The specified feature name does not occur in the dataset.")
         
+
+
+class OpenMLData(dataset_iml):
+    def __init__(self, name, X, y, categorical_features_idx, feature_names):
+        # Set attributes directly without relying on a file path
+        self.id = 1
+       
+        self.df = pd.DataFrame(X, columns=feature_names)
+        self.df['target'] = y 
+        self.categorical_features = [feature_names[i] for i in categorical_features_idx]
+
+        # Initialize attributes that would be inferred from a file
+        self.X_df = self.df.drop(columns=['target'])
+        self.y_df = self.df['target']
+        
+        # Convert to numpy arrays for consistency with the ConsultingData class
+        self.Xy = self.df.to_numpy()
+        self.X = self.X_df.to_numpy()
+        self.y = self.y_df.to_numpy()
+
+        # infer relevant metadata
+        self.y_classes = len(np.unique(self.y))
+        self.feature_names = np.array(feature_names)
+        self.num_features = self.X.shape[1]
+        self.num_samples = self.X.shape[0]
+
+        self.feature_complete_names = {}
+
+        self.levels_per_feature = np.apply_along_axis(lambda x: len(np.unique(x)), axis=0, arr=self.X)
+        self.categorical_features_idx = categorical_features_idx
+        self.continuous_features = list(set(self.feature_names[:-1]) - set(self.categorical_features))
+        self.continuous_features_idx = [i for i, feature_name in enumerate(self.feature_names[:-1]) if feature_name in self.continuous_features]
+
+        # No need to set a path for dataset since data is directly passed
+        # self.path_dataset = Not needed
+        
+        # Set project_dir to current directory or any specific directory as a placeholder
+        self.project_dir = Path.cwd()
+        self.max_n_train= 1024
+
+        # No need to call super().__init__() as we're directly initializing everything here
+        # The original intent of calling super().__init__() was to load and process the file, which we've bypassed
+        
