@@ -147,12 +147,20 @@ class SHAP(TabPFN_Interpret):
             weight_prob_dist = [(i, get_kernel_weight(i, self.data.num_features) /
                                  sum_kernel_shap_weights) for i in range(1, self.data.num_features)]
 
+        def get_coal():
+            coalition_mask = np.random.binomial(
+                n=1, p=0.5, size=self.data.num_features)
+            coalition_mask_bool = np.array(coalition_mask, dtype=bool)
+            return coalition_mask, coalition_mask_bool
+
         for i in range(self.K):
             # Step 1: Sample K coalitions
             if self.apply_WLS:
-                coalition_mask = np.random.binomial(
-                    n=1, p=0.5, size=self.data.num_features)
-                coalition_mask_bool = np.array(coalition_mask, dtype=bool)
+                coalition_mask, coalition_mask_bool= get_coal()
+
+                #Case that only falses are sampled
+                while sum(coalition_mask)== 0:
+                    coalition_mask, coalition_mask_bool= get_coal()
             else:
                 # Sample coalitions w.r.t probability distribution that has probabilities proportional to the kernel weights
                 # and use OLS instead of WLS.
@@ -175,20 +183,23 @@ class SHAP(TabPFN_Interpret):
             # design_matrix = design_matrix.append(
             #     pd.Series(coalition_mask), ignore_index=True)
             design_matrix = pd.concat([design_matrix, pd.DataFrame([coalition_mask])],
-                                              ignore_index=True)
+                                              ignore_index=True,
+                                              axis=0)
 
             if self.pred_based:
                 # pred_values = pred_values.append(
                 #     pd.Series(preds[:, self.class_to_be_explained]), ignore_index=True)
-                pred_values = pd.concat([pred_values, pd.DataFrame(preds[:, self.class_to_be_explained])],
-                                        ignore_index=True)
+                pred_values = pd.concat([pred_values, pd.DataFrame(preds[:, self.class_to_be_explained]).transpose()],
+                                        ignore_index=True,
+                                        axis=0)
             if self.loss_based:
                 loss = self.criterion(torch.tensor(preds), torch.tensor(
                     self.y_test, dtype=torch.long))  # .detach().numpy()
                 # loss_values = loss_values.append(
                 #     pd.Series(loss.item()), ignore_index=True)
                 loss_values = pd.concat([loss_values, pd.DataFrame([loss.item()])],
-                                        ignore_index=True)
+                                        ignore_index=True,
+                                        axis=0)
 
             # Step 3: Compute weights through Kernel
             if self.apply_WLS:
@@ -196,7 +207,8 @@ class SHAP(TabPFN_Interpret):
                     coalition_mask.sum(), self.data.num_features)
                 # weights = weights.append(pd.Series(weight), ignore_index=True)
                 weights = pd.concat([weights, pd.Series(weight)],
-                                    ignore_index=True)
+                                    ignore_index=True,
+                                    axis=0)
 
         # Step 4: Fit a weighted linear model (or linear model)
         column_names = ["intercept"] + list(self.data.feature_names)

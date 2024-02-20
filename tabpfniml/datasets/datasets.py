@@ -126,7 +126,7 @@ class dataset_iml(ABC):
                 if (n_train <= self.max_n_train) and (n_train < self.num_samples):
                     pass
                 else:
-                    n_train= min(self.max_n_train, self.num_samples-1)
+                    n_train= min(self.max_n_train, int(self.num_samples * 0.66))
             else:
                 if (self.num_samples - self.max_n_train) > 0:
                     n_train= self.max_n_train
@@ -224,7 +224,10 @@ class OpenMLData(dataset_iml):
             dataset = openml.datasets.get_dataset(did)
             X, y, categorical_indicator, attribute_names = dataset.get_data(
                 target=dataset.default_target_attribute,
-                dataset_format='array')
+                dataset_format='dataframe')
+            
+            X= X.to_numpy()
+            y= y.to_numpy()
             
             #Shuffle data (some OpenML datasets exhibit long sequences with identical label)
             shuffle_indices = np.random.permutation(len(y))

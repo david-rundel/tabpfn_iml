@@ -24,7 +24,7 @@ dependencies=[
         'lightgbm>=4.0.0',
         'seaborn>=0.12.2',
         'gower>=0.1.2',
-        'pymoo>=0.6.0.1',
+        'pymoo==0.6.0.1',
         'typing>=3.7.4.3',
         'tabpfn==0.1.8',
         'netcal>=1.3.5',
