@@ -172,23 +172,31 @@ class SHAP(TabPFN_Interpret):
             self.classifier.fit(X_train_masked, self.y_train)
             preds = self.classifier.predict_proba(X_test_masked)
 
-            design_matrix = design_matrix.append(
-                pd.Series(coalition_mask), ignore_index=True)
+            # design_matrix = design_matrix.append(
+            #     pd.Series(coalition_mask), ignore_index=True)
+            design_matrix = pd.concat([design_matrix, pd.DataFrame([coalition_mask])],
+                                              ignore_index=True)
 
             if self.pred_based:
-                pred_values = pred_values.append(
-                    pd.Series(preds[:, self.class_to_be_explained]), ignore_index=True)
+                # pred_values = pred_values.append(
+                #     pd.Series(preds[:, self.class_to_be_explained]), ignore_index=True)
+                pred_values = pd.concat([pred_values, pd.DataFrame(preds[:, self.class_to_be_explained])],
+                                        ignore_index=True)
             if self.loss_based:
                 loss = self.criterion(torch.tensor(preds), torch.tensor(
                     self.y_test, dtype=torch.long))  # .detach().numpy()
-                loss_values = loss_values.append(
-                    pd.Series(loss.item()), ignore_index=True)
+                # loss_values = loss_values.append(
+                #     pd.Series(loss.item()), ignore_index=True)
+                loss_values = pd.concat([loss_values, pd.DataFrame([loss.item()])],
+                                        ignore_index=True)
 
             # Step 3: Compute weights through Kernel
             if self.apply_WLS:
                 weight = get_kernel_weight(
                     coalition_mask.sum(), self.data.num_features)
-                weights = weights.append(pd.Series(weight), ignore_index=True)
+                # weights = weights.append(pd.Series(weight), ignore_index=True)
+                weights = pd.concat([weights, pd.Series(weight)],
+                                    ignore_index=True)
 
         # Step 4: Fit a weighted linear model (or linear model)
         column_names = ["intercept"] + list(self.data.feature_names)
