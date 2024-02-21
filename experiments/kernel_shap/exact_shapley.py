@@ -40,16 +40,19 @@ class Shapley_Exact(TabPFN_Interpret):
         feature_indices_list = list(range(self.data.num_features))
         feature_permutations = list(permutations(feature_indices_list))
 
+        perm_count= len(feature_permutations) if not debug else 32
+
         #Initialize dataframe to track marginal contributions of features
-        marg_cont_df= pd.DataFrame(columns= [j for j in range(self.data.num_features)])
+        #marg_cont_df= pd.DataFrame(columns= [j for j in range(self.data.num_features)]) #DEL
+        marg_cont= np.zeros((self.X_test.shape[0], self.data.num_features, perm_count))
 
         #Set relative frequency of class 1 as mean pred
         self.mean_pred= self.y_train.mean()
 
         if debug:
-            feature_permutations= feature_permutations[:32]
+            feature_permutations= feature_permutations[:perm_count]
 
-        for permutation in feature_permutations:
+        for index, permutation in enumerate(feature_permutations):
             temp_marg_cont= {}
             prev_pred_in_coalition= np.full(self.X_test.shape[0], self.mean_pred)
             
@@ -64,10 +67,12 @@ class Shapley_Exact(TabPFN_Interpret):
                 self.classifier.fit(X_train_masked, self.y_train.copy())
                 temp_pred= self.classifier.predict_proba(X_test_masked)[:, self.class_to_be_explained] #, return_logits= True
 
-                temp_marg_cont[temp_features[-1]]= list(temp_pred - prev_pred_in_coalition)
+                #temp_marg_cont[temp_features[-1]]= np.array(temp_pred - prev_pred_in_coalition) #DEL
+                marg_cont[:, temp_features[-1], index]= np.array(temp_pred - prev_pred_in_coalition)
                 prev_pred_in_coalition= temp_pred
 
-            marg_cont_df= marg_cont_df.append(temp_marg_cont, ignore_index=True)
+            #marg_cont_df= marg_cont_df.append(temp_marg_cont, ignore_index=True)
         
-        marg_cont_array= np.array(marg_cont_df.to_numpy().tolist())
-        self.shapley_values= np.transpose(marg_cont_array.mean(axis=0))
+        #marg_cont_array= np.array(marg_cont_df.to_numpy().tolist())
+        #self.shapley_values= np.transpose(marg_cont_array.mean(axis=0))
+        self.shapley_values= marg_cont.mean(axis=-1)

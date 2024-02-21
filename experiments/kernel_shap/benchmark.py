@@ -41,7 +41,7 @@ else:
     max_s= 16
     runs= 10
 
-openml_id= 700
+openml_id= 770 #
 plot_each_run= False
 
 #Ensure reproducibility of conducted experiments across several runs
