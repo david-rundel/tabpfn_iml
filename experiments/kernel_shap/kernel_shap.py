@@ -21,7 +21,8 @@ class Kernel_SHAP(TabPFN_Interpret):
                  n_test: int = 512,
                  N_ensemble_configurations: int = 16,
                  device: str = "cpu",
-                 debug: bool = False):
+                 debug: bool = False,
+                 run_seed: int = 728):
         """
             ...
         """
@@ -35,8 +36,9 @@ class Kernel_SHAP(TabPFN_Interpret):
                          to_torch_tensor=False,
                          store_gradients=False)
         
-        #Ensure stochasticity across several averaged runs
-        np.random.seed(random.randint(0, 1000))
+        #Ensure stochasticity across several averaged runs (different feature subsets and imputation samples)
+        random.seed(run_seed)
+        np.random.seed(run_seed)
 
     def fit(self,
             class_to_be_explained: int = 1,
@@ -72,7 +74,7 @@ class Kernel_SHAP(TabPFN_Interpret):
 
         #Specify the sizes of feature subsets that we test
         self.K_min= self.data.num_features #To avoid n<p issues
-        self.K_max= int(2 ** self.data.num_features * 1.5) #Sample even more coalitions than there are distinct ones, since not every unique one might be sampled otherwise.
+        self.K_max= int(2 ** self.data.num_features * 2) #Sample even more coalitions than there are distinct ones, since not every unique one might be sampled otherwise.
         self.K_range= range(self.K_min, self.K_max+1)
 
         self.design_matrix = pd.DataFrame()
@@ -80,7 +82,7 @@ class Kernel_SHAP(TabPFN_Interpret):
 
         pred_values_exact_marg = pd.DataFrame()
         pred_values_approximate_marg= {}
-        for j in range(max_s):
+        for j in range(1, max_s+1):
             pred_values_approximate_marg[j]= pd.DataFrame()
 
         def get_coal():
@@ -133,7 +135,7 @@ class Kernel_SHAP(TabPFN_Interpret):
             #Marginalize out non-coalition features by taking S samples from dataset to impute values
             preds_approximate= None
 
-            #Iterate over MC-samples and average predicitons
+            #Iterate over MC-imputation-samples and average predicitons
             self.random_train_indices= []
             for j in range(max_s):
                 X_test_imputed = self.X_test.copy()
@@ -153,7 +155,7 @@ class Kernel_SHAP(TabPFN_Interpret):
                 #Compute the average prediction for the first s imputing samples
                 temp_mean= preds_approximate[:,:j+1].copy().mean(axis=1)
 
-                pred_values_approximate_marg[j]= pred_values_approximate_marg[j].append(
+                pred_values_approximate_marg[j+1]= pred_values_approximate_marg[j+1].append(
                     pd.Series(temp_mean), ignore_index=True)
 
         def get_SHAP_values(temp_preds, K):
@@ -182,5 +184,5 @@ class Kernel_SHAP(TabPFN_Interpret):
         #Compute Kernel SHAP for approximate marginalization
         self.SHAP_approximate_marg= {}
         for i in self.K_range:
-            for j in range(max_s):
+            for j in range(1, max_s+1):
                 self.SHAP_approximate_marg[(i,j)]= get_SHAP_values(pred_values_approximate_marg[j], K=i)

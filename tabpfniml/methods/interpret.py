@@ -65,7 +65,8 @@ class TabPFN_Interpret(ABC):
 
         self.classifier = TabPFNClassifier(device=self.device,
                                            N_ensemble_configurations=self.N_ensemble_configurations,
-                                           store_gradients=self.store_gradients)
+                                           store_gradients=self.store_gradients,
+                                           seed= 42)
 
         # Prepare plotting library
         sns.set_style("ticks")

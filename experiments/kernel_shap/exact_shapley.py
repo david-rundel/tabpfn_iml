@@ -44,14 +44,14 @@ class Shapley_Exact(TabPFN_Interpret):
         marg_cont_df= pd.DataFrame(columns= [j for j in range(self.data.num_features)])
 
         #Set relative frequency of class 1 as mean pred
-        mean_pred= self.y_train.mean()
+        self.mean_pred= self.y_train.mean()
 
         if debug:
-            feature_permutations= feature_permutations[:8]
+            feature_permutations= feature_permutations[:32]
 
         for permutation in feature_permutations:
             temp_marg_cont= {}
-            prev_pred_in_coalition= np.full(self.X_test.shape[0], mean_pred)
+            prev_pred_in_coalition= np.full(self.X_test.shape[0], self.mean_pred)
             
             #For each permutation and for all first k elements for k=1,...,p refit the model and compute
             #the difference in prediction to the subset of the first k-1 elements
