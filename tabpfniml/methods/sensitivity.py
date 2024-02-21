@@ -127,12 +127,12 @@ class Sensitivity(TabPFN_Interpret):
 
         # Map to torch.tensor as leaf node
         self.X_train = torch.tensor(
-            self.X_train, requires_grad=True, device=self.device)
+            self.X_train, requires_grad=True, dtype=torch.float32)
         self.X_test = torch.tensor(
-            self.X_test, requires_grad=True, device=self.device)
-        self.y_train = torch.tensor(self.y_train, device=self.device)
+            self.X_test, requires_grad=True, dtype=torch.float32)
+        self.y_train = torch.tensor(self.y_train, dtype=torch.float32)
         self.y_test = torch.tensor(
-            self.y_test, device=self.device).type(torch.LongTensor)
+            self.y_test).type(torch.LongTensor)
 
         # Define gradient hook to store gradients computed in the backward pass
         # https://discuss.pytorch.org/t/why-cant-i-see-grad-of-an-intermediate-variable/94/7

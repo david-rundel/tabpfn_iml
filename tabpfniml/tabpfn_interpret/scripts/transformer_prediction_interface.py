@@ -208,9 +208,14 @@ class TabPFNClassifier(BaseEstimator, ClassifierMixin):
             X = check_array(X, force_all_finite=False)
 
             X_full = np.concatenate([self.X_, X], axis=0)
-            X_full = torch.tensor(X_full, device=self.device).float().unsqueeze(1)
             y_full = np.concatenate([self.y_, np.zeros(shape=X.shape[0])], axis=0)
-            y_full = torch.tensor(y_full, device=self.device).float().unsqueeze(1)
+
+            if self.device == 'mps':
+                X_full = torch.tensor(X_full, device=self.device, dtype=torch.float32).float().unsqueeze(1)
+                y_full = torch.tensor(y_full, device=self.device, dtype=torch.float32).float().unsqueeze(1)
+            else:
+                X_full = torch.tensor(X_full, device=self.device).float().unsqueeze(1)
+                y_full = torch.tensor(y_full, device=self.device).float().unsqueeze(1)
 
         else:
             assert (torch.is_tensor(self.X_) & torch.is_tensor(X)) #From https://github.com/automl/TabPFN/pull/30/files
