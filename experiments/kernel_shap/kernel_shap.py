@@ -74,7 +74,7 @@ class Kernel_SHAP(TabPFN_Interpret):
 
         #Specify the sizes of feature subsets that we test
         self.K_min= self.data.num_features #To avoid n<p issues
-        self.K_max= int(2 ** self.data.num_features * 2) #Sample even more coalitions than there are distinct ones, since not every unique one might be sampled otherwise.
+        self.K_max= int(2 ** self.data.num_features * 2.5) #Sample even more coalitions than there are distinct ones, since not every unique one might be sampled otherwise.
         self.K_range= range(self.K_min, self.K_max+1)
 
         self.design_matrix = pd.DataFrame()

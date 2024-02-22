@@ -1,10 +1,9 @@
 import sys
 sys.path.append('/Users/juli/Documents/SoSe_23/Consulting/publication/tabpfn_iml') #Modify #Modify
+#sys.path.append('/Users/davidrundel/git/tabpfn_iml/')
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
 import datetime
 import pickle
 import random
@@ -58,11 +57,11 @@ if debug:
 
 else:
     n_train= 256
-    n_test= 64
-    max_s= 16
-    runs= 10
+    n_test= 128
+    max_s= 25
+    runs= 25
 
-openml_id= 819 # 770, 900, 819
+openml_id= 770 # 770, 819, 900
 plot_each_run= False
 
 #Ensure reproducibility of conducted experiments across several runs
@@ -141,47 +140,14 @@ for run in range(runs):
     del loss_appr_marg_df
 
 
-def plot_results(loss_appr_marg,
-                 loss_exact_marg,
-                 weights):
-    #TODO: Integrate weights
-
-    plot_df= loss_appr_marg.copy()
-    plot_df[-1]= loss_exact_marg.copy()
-
-    x, y = np.meshgrid(plot_df.columns, plot_df.index)
-    x_flat = x.flatten()
-    y_flat = y.flatten()
-    values = plot_df.values.flatten()
-
-    plt.figure(figsize=(10, 6))
-
-    cmap_original = plt.get_cmap('magma')
-    cmap_inverted = ListedColormap(cmap_original.colors[::-1])
-
-    scatter = plt.scatter(x_flat, y_flat, c=values, cmap=cmap_inverted, s=30)
-    plt.colorbar(scatter, label='Values')
-    plt.title('Loss per M and L')
-    plt.xlabel('L')
-    plt.ylabel('M')
-    plt.show()
-
-    del plot_df
-
-#Plot results per run
-if plot_each_run:
-    for run in range(runs):
-        plot_results(loss_appr_marg_runs[run],
-                     loss_exact_marg_runs[run],
-                     weights_runs[run])
         
 #Aggregate results across runs
 appr_cols= list(range(1, max_s+1))
 exact_col= [-1]
-loss_exact_marg_mean= pd.DataFrame(np.concatenate([loss_exact_marg_runs[i] for i in range(runs)], axis=1).mean(axis=-1), columns= exact_col)
-loss_appr_marg_mean= pd.DataFrame(np.stack([loss_appr_marg_runs[i] for i in range(runs)]).mean(axis=0), columns= appr_cols)
-loss_exact_marg_std= pd.DataFrame(np.concatenate([loss_exact_marg_runs[i] for i in range(runs)], axis=1).std(axis=-1), columns= exact_col)
-loss_appr_marg_std= pd.DataFrame(np.stack([loss_appr_marg_runs[i] for i in range(runs)]).std(axis=0), columns= appr_cols)
+loss_exact_marg_mean= pd.DataFrame(np.concatenate([loss_exact_marg_runs[i] for i in range(runs)], axis=1).mean(axis=-1), columns= exact_col, index= loss_exact_marg_runs[0].index)
+loss_appr_marg_mean= pd.DataFrame(np.stack([loss_appr_marg_runs[i] for i in range(runs)]).mean(axis=0), columns= appr_cols, index= loss_appr_marg_runs[0].index)
+loss_exact_marg_std= pd.DataFrame(np.concatenate([loss_exact_marg_runs[i] for i in range(runs)], axis=1).std(axis=-1), columns= exact_col, index= loss_exact_marg_runs[0].index)
+loss_appr_marg_std= pd.DataFrame(np.stack([loss_appr_marg_runs[i] for i in range(runs)]).std(axis=0), columns= appr_cols, index= loss_appr_marg_runs[0].index)
 weights_mean= None #TODO
 
 #Save results
@@ -214,13 +180,5 @@ formatted_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 with open('experiments/kernel_shap/results/kernel_shap_' + str(openml_id) + '_' + formatted_datetime + '.pkl', 'wb') as file:
     pickle.dump(experiment_results, file)
 
-#Plot overall results
-plot_results(loss_appr_marg_mean,
-             loss_exact_marg_mean,
-             weights_runs[run])
-
 print("Experiment done.")
-
-# with open('experiments/kernel_shap/results/....pkl', 'rb') as file:
-#     exp_results = pickle.load(file)
 
