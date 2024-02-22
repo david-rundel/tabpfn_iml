@@ -155,8 +155,15 @@ class Kernel_SHAP(TabPFN_Interpret):
                 #Compute the average prediction for the first s imputing samples
                 temp_mean= preds_approximate[:,:j+1].copy().mean(axis=1)
 
-                pred_values_approximate_marg[j+1]= pred_values_approximate_marg[j+1].append(
-                    pd.Series(temp_mean), ignore_index=True)
+                # pred_values_approximate_marg[j+1]= pred_values_approximate_marg[j+1].append(
+                #     pd.Series(temp_mean), ignore_index=True)
+                
+                pred_values_approximate_marg[j+1] = pd.concat([pred_values_approximate_marg[j+1],
+                                                               pd.Series(temp_mean).to_frame().T],
+                                                               ignore_index=True,
+                                                               axis=0)
+
+                
 
         def get_SHAP_values(temp_preds, K):
             # Step 4: Fit a weighted linear model

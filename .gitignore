@@ -1,5 +1,6 @@
 **/__pycache__/
 .vscode/launch.json
-.DS_Store
+**/.DS_Store
 .vscode/settings.json
 *.cpkt
+*.pkl

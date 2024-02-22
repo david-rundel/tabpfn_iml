@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/Users/davidrundel/git/tabpfn_iml/') #Modify
+sys.path.append('/Users/juli/Documents/SoSe_23/Consulting/publication/tabpfn_iml') #Modify #Modify
 
 import numpy as np
 import pandas as pd
@@ -8,6 +8,7 @@ from matplotlib.colors import ListedColormap
 import datetime
 import pickle
 import random
+import torch
 
 from tabpfniml.datasets.datasets import OpenMLData
 from experiments.kernel_shap.exact_shapley import Shapley_Exact
@@ -27,6 +28,26 @@ in the tabpfniml-folder. Instead, we use experiments/kernel_shap/kernel_shap.py 
 experiments/kernel_shap/shapley.py to compute the exact and approximate versions.
 """
 
+# set correct torch device
+if not torch.backends.mps.is_available():
+    if not torch.backends.mps.is_built():
+        print("MPS not available because the current PyTorch install was not "
+              "built with MPS enabled.")
+    else:
+        print("MPS not available because the current MacOS version is not 12.3+ "
+              "and/or you do not have an MPS-enabled device on this machine.")
+
+elif torch.backends.mps.is_available():
+    DEVICE = 'mps'
+
+elif torch.cuda.is_available():
+    DEVICE = 'cuda'
+
+else:
+    DEVICE = 'cpu'
+
+print(f"Using device: {DEVICE}")
+
 #Set experiment specific HPs
 debug= False
 if debug:
@@ -41,7 +62,7 @@ else:
     max_s= 16
     runs= 10
 
-openml_id= 770 #
+openml_id= 819 # 770, 900, 819
 plot_each_run= False
 
 #Ensure reproducibility of conducted experiments across several runs
@@ -67,7 +88,8 @@ random_train_indices= {}
 #Since there is no stochasticity in Shapley value computation, we do not have to repeat it multiple times.
 shapley_exact = Shapley_Exact(data= data, 
                                 n_train= n_train,
-                                n_test= n_test)
+                                n_test= n_test,
+                                device= DEVICE)
 shapley_exact.fit(debug= debug)
 
 
@@ -78,7 +100,8 @@ for run in range(runs):
     kernel_shap = Kernel_SHAP(data=data,
                                 n_train= n_train,
                                 n_test= n_test,
-                                run_seed= seeds[run])
+                                run_seed= seeds[run], 
+                                device= DEVICE)
     kernel_shap.fit(max_s= max_s)
 
     #Check if train and test subsets align
