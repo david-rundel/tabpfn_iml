@@ -29,7 +29,7 @@ This package provides the following methods:
 | Method Name                             | Filepath to Implementation          | Scope   |
 |-----------------------------------------|--------------------------------------|---------|
 | Leave-One-Covariate-Out (LOCO)          | `tabpfniml/methods/loco.py`          | Global  |
-| Shapley Additive Global Importances (SAGE) | `/path/to/SAGE_implementation`    | Global  |
+| Shapley Additive Global Importances (SAGE) | `tabpfniml/methods/kernel_shap.py`    | Global  |
 
 
 
@@ -38,7 +38,6 @@ This package provides the following methods:
 |----------------------------------------|----------------------------------------|---------|
 | Leave-One-Out (LOO)                    | `tabpfniml/methods/loco.py`            | Global  |
 | Sensitivity Analysis                   | `tabpfniml/methods/sensitivity.py`     | Global  |
-| Data Shapley (with Kernel SHAP)        | `/path/to/Data_Shapley_implementation` | Global  |
 
 
 ### Local Explanations
