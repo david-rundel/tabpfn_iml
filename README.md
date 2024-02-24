@@ -15,31 +15,52 @@ Moreover, within [tabpfniml/tabpfn_interpret](tabpfniml/tabpfn_interpret), it co
 
 This package provides the following methods:
 
-### Feature Effect Methods:
-- Individual Conditional Expectation (ICE) curves (local)
-- Partial Dependence (PD) plots (global)
-- Accumulated Local Effects (ALE) plots (local)
-- Kernel SHAP (local & global)
-- Sensitivity Analysis (local & global)
-### Feature Importance Methods:
-- Leave-One-Covariate-Out (LOCO) (global)
-- Shapley Additive Global Importances (SAGE) (global)
-### Data Valuation Methods:
-- Leave-One-Out (LOO) (global)
-- Sensitivity Analysis (global)
-- Data Shapley (with Kernel SHAP) (global)
-### Local Explanations:
-- Counterfactual Explanations (CE) (local)
-### Clinical value assessment & Uncertainty quantification:
-- Decision Curve Analysis (DCA) (global)
-- Conformal Prediction (local)
+### Feature Effect Methods
+| Method Name                                   | Filepath to Implementation            | Scope           |
+|-----------------------------------------------|---------------------------------------|-----------------|
+| Individual Conditional Expectation (ICE) curves | `tabpfniml/methods/ice_pd.py`         | Local           |
+| Partial Dependence (PD) plots                | `tabpfniml/methods/ice_pd.py`          | Global          |
+| Accumulated Local Effects (ALE) plots        | `tabpfniml/methods/ale.py`             | Local           |
+| Kernel SHAP                                  | `tabpfniml/methods/kernel_shap.py`     | Local & Global  |
+| Sensitivity Analysis                         | `tabpfniml/methods/sensitivity.py`     | Local & Global  |
+
+
+### Feature Importance Methods
+| Method Name                             | Filepath to Implementation          | Scope   |
+|-----------------------------------------|--------------------------------------|---------|
+| Leave-One-Covariate-Out (LOCO)          | `tabpfniml/methods/loco.py`          | Global  |
+| Shapley Additive Global Importances (SAGE) | `/path/to/SAGE_implementation`    | Global  |
+
+
+
+### Data Valuation Methods
+| Method Name                            | Filepath to Implementation            | Scope   |
+|----------------------------------------|----------------------------------------|---------|
+| Leave-One-Out (LOO)                    | `tabpfniml/methods/loco.py`            | Global  |
+| Sensitivity Analysis                   | `tabpfniml/methods/sensitivity.py`     | Global  |
+| Data Shapley (with Kernel SHAP)        | `/path/to/Data_Shapley_implementation` | Global  |
+
+
+### Local Explanations
+| Method Name                           | Filepath to Implementation          | Scope  |
+|---------------------------------------|--------------------------------------|--------|
+| Counterfactual Explanations (CE)      | `tabpfniml/methods/counterfactuals.py` | Local  |
+
+
+
+### Clinical value assessment & Uncertainty quantification
+| Method Name                           | Filepath to Implementation          | Scope   |
+|---------------------------------------|--------------------------------------|---------|
+| Decision Curve Analysis (DCA)         | `tabpfniml/methods/dca.py`           | Global  |
+| Conformal Prediction                  | `tabpfniml/methods/conformal_pred.py` | Local   |
+
 
 
 # Setup
 
 To test this package, create a new conda environment. To do so, change the environment name `package_test` to a name of your choice and run the following:
 ```shell
-conda create --name package_test python=3.8 pip
+conda create --name package_test python=3.8
 conda activate package_test
 ```
 Now, install the package tabpfn_iml from the local build file using pip into the conda environment:
