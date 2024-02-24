@@ -6,9 +6,9 @@ import seaborn as sns
 import pickle
 import openml
 
-experiment_770_results_path= 'experiments/kernel_shap/results/kernel_shap_770_20240221_234505.pkl'
-experiment_819_results_path= 'experiments/kernel_shap/results/kernel_shap_819_20240222_101704.pkl'
-experiment_900_results_path= 'experiments/kernel_shap/results/kernel_shap_900_20240222_012027.pkl'
+experiment_770_results_path= 'experiments/kernel_shap/results/kernel_shap_770_20240223_202644.pkl'
+experiment_819_results_path= 'experiments/kernel_shap/results/kernel_shap_819_20240224_143219.pkl'
+experiment_900_results_path= 'experiments/kernel_shap/results/kernel_shap_900_20240224_160917.pkl'
 
 
 experiment_results_paths= [experiment_770_results_path,
@@ -176,5 +176,4 @@ def plot_loss_per_tc(stacked_results, save):
         plt.show()
 
       
-
-plot_loss_per_tc(stacked_results, False)
+plot_loss_per_tc(stacked_results, True)

@@ -208,6 +208,7 @@ class dataset_iml(ABC):
 class OpenMLData(dataset_iml):
     def __init__(self, 
                  openml_id: int= 1,
+                 avoid_pruning: bool= False,
                  seed: int= 728):
         
         np.random.seed(seed)
@@ -239,7 +240,7 @@ class OpenMLData(dataset_iml):
             X = X[shuffle_indices]
             y = y[shuffle_indices]
             
-            if X.shape[0] > 1024:
+            if X.shape[0] > 1024 and not avoid_pruning:
                 X, _, y, _ = train_test_split(X, y, train_size=1024, stratify=y, random_state= seed)
             
             # Find indices of categorical features

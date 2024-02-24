@@ -7,6 +7,11 @@ from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils import column_or_1d
 import seaborn as sns
 import matplotlib.pyplot as plt
+
+#TO DELETE
+import sys
+sys.path.append('/Users/davidrundel/git/tabpfn_iml/')
+
 from tabpfniml.methods.interpret import TabPFN_Interpret
 from tabpfniml.datasets.datasets import dataset_iml
 from typing import Union, Optional, List
@@ -50,37 +55,7 @@ class Sensitivity(TabPFN_Interpret):
                          store_gradients=True,
                          standardize_features=True,
                          to_torch_tensor=False)
-
-    def fit(self,
-            compute_wrt_feature: bool = True,
-            compute_wrt_observation: bool = False,
-            loss_based: bool = False,
-            pred_based: bool = True,
-            class_to_be_explained: int = 1):
-        """
-        This method calculates the gradient of the model prediction (or alternatively loss) with 
-        respect to the input features (or alternatively training observation). By doing so, 
-        it determines the inputs that require minimal alteration while achieving the maximum 
-        change in prediction (or alternatively loss). However, it only represents the sensitivity 
-        of model outputs (or alternatively loss-values) to changes in the input while not 
-        considering the extent to which the input may have already influenced it (no attribution-
-        method).
-
-        Modifies the TabPFN forward- and backward-pass to store gradients and infer 
-        how sensitive the model predictions are to features or training observations.
-
-        We have decided to implement this as a local method, meaning the the sensitivity scores are computed per
-        test observation in isolation. They can afterwards be aggregated to global scores. Global scores could
-        be estimated more efficiently, however then it would not be possible to obtain local scores.
-
-        Args:
-            compute_wrt_feature (bool, optional): Whether to estimate the effects/importance of features. Defaults to True.
-            compute_wrt_observation (bool, optional): Wheter to compute the gradients for observations instead of features. Defaults to False.
-            loss_based (bool, optional): Whether the model performance (instead of the model predictions) should be explained. Constitutes a Feature Importance instead of Feature Effects measure. Defaults to False.
-            pred_based (bool, optional): Whether to estimate feature/observation effects. Defaults to True.
-            class_to_be_explained (int, optional): The class that predictions are explained for. Ignored it loss_based=True. Defaults to 1.
-        """
-
+        
         def quality_checks(X_train, X_test, y_train):
             """
             Helper method
@@ -98,6 +73,14 @@ class Sensitivity(TabPFN_Interpret):
                         % len(cls)
                     )
                 classes_ = cls
+
+                #Edit Rundel:
+                #Case OpenML Datasets:
+                try:
+                    classes_= np.array([i for i in range(self.dclasses)])
+                except:
+                    pass
+
                 return np.asarray(y, dtype=np.float64, order="C"), classes_
 
             X_train, y_train = check_X_y(
@@ -108,22 +91,63 @@ class Sensitivity(TabPFN_Interpret):
             X_test = check_array(X_test, force_all_finite=False)
 
             return X_train, X_test, y_train, classes_
-
-        self.compute_wrt_feature = compute_wrt_feature
-        self.compute_wrt_observation = compute_wrt_observation
-        self.loss_based = loss_based
-        self.pred_based = pred_based
-        self.class_to_be_explained = class_to_be_explained
-
+        
         # Step 1: Quality Checks
         # Manually perform a range of quality checks on the data before transforming them from np.arrays into torch.tensors.
         # The quality checks are then left out in the TabPFN forward pass (Normally done in tabpfn/scripts/transformer_prediction_interface.py fit())
         # If done in the forward-pass, the quality checks would require the data to be in np.array-format.
         # This would interrupt the computational graph and stop the data from being a leaf node that gradients can be computed for.
         # Our approach ensuress that all quality-checks are conducted and we can compute gradients for the data.
+
+        try:
+            self.dclasses= data.y_classes
+        except:
+            pass
+
         self.X_train, self.X_test, self.y_train, self.classifier.classes_ = quality_checks(X_train=self.X_train,
                                                                                            X_test=self.X_test,
                                                                                            y_train=self.y_train)
+
+
+    def fit(self,
+            compute_wrt_feature: bool = True,
+            compute_wrt_observation: bool = False,
+            loss_based: bool = False,
+            pred_based: bool = True,
+            comp_global: bool = False,
+            class_to_be_explained: int = 1):
+        """
+        This method calculates the gradient of the model prediction (or alternatively loss) with 
+        respect to the input features (or alternatively training observation). By doing so, 
+        it determines the inputs that require minimal alteration while achieving the maximum 
+        change in prediction (or alternatively loss). However, it only represents the sensitivity 
+        of model outputs (or alternatively loss-values) to changes in the input while not 
+        considering the extent to which the input may have already influenced it (no attribution-
+        method).
+
+        Modifies the TabPFN forward- and backward-pass to store gradients and infer 
+        how sensitive the model predictions are to features or training observations.
+
+        We have decided to implement this as a local method, meaning the the sensitivity scores are computed per
+        test observation in isolation. They can afterwards be aggregated to global scores. 
+        With the hyperparameter comp_global we also enable a more efficient computation of global scores for Feature- 
+        or Observation Importance. However, this comes at the cost of not being able to provide local scores for OI.
+
+        Args:
+            compute_wrt_feature (bool, optional): Whether to estimate the effects/importance of features. Defaults to True.
+            compute_wrt_observation (bool, optional): Wheter to compute the gradients for observations instead of features (leads to a data valuation metric). Defaults to False.
+            loss_based (bool, optional): Whether the model performance (instead of the model predictions) should be explained. Constitutes a Feature Importance instead of Feature Effects measure. Defaults to False.
+            pred_based (bool, optional): Whether to estimate feature/observation effects. Defaults to True.
+            comp_global (bool, optional): Conditional hyperparameter that is considered ony if loss_based= True and pred_based= False. Enables a more efficient computation of global Feature- or Observation Importance at the cost of not delivering local scores for OI anymore.
+            class_to_be_explained (int, optional): The class that predictions are explained for. Ignored it loss_based=True. Defaults to 1.
+        """
+
+        self.compute_wrt_feature = compute_wrt_feature
+        self.compute_wrt_observation = compute_wrt_observation
+        self.loss_based = loss_based
+        self.pred_based = pred_based
+        self.class_to_be_explained = class_to_be_explained
+        self.comp_global = comp_global
 
         # Map to torch.tensor as leaf node
         self.X_train = torch.tensor(
@@ -146,6 +170,12 @@ class Sensitivity(TabPFN_Interpret):
         self.X_train.register_hook(save_grad("X_train"))
         self.X_test.register_hook(save_grad("X_test"))
 
+        #DELETE!
+        if self.y_train.mean()==4:
+            self.y_train[1]= self.y_train[1]-1
+        if self.y_train.mean()==0:
+            self.y_train[1]= self.y_train[1]+1
+
         self.classifier.fit(self.X_train, self.y_train)
         preds = self.classifier.predict_proba(self.X_test)
 
@@ -157,92 +187,132 @@ class Sensitivity(TabPFN_Interpret):
                 self.OE_local = pd.DataFrame()
 
         if self.loss_based:
-            # Tradiitonal LOCO as OI_local
-            self.criterion = torch.nn.CrossEntropyLoss(reduction='none')
-            loss = self.criterion(preds, self.y_test)  # .detach().numpy()
+            if self.comp_global:
+                self.criterion = torch.nn.CrossEntropyLoss(reduction='mean')
+                loss = self.criterion(preds, self.y_test)  # .detach().numpy()
 
-            if self.compute_wrt_feature:
-                self.FI_local = pd.DataFrame()
-            if self.compute_wrt_observation:
-                self.OI_local = pd.DataFrame()
+                if self.compute_wrt_feature:
+                    self.FI_global = pd.DataFrame()
+                if self.compute_wrt_observation:
+                    self.OI_global = pd.DataFrame()
+
+                if self.compute_wrt_feature:
+                    self.FI_local = pd.DataFrame()
+
+            else:
+                self.criterion = torch.nn.CrossEntropyLoss(reduction='none')
+                loss = self.criterion(preds, self.y_test)  # .detach().numpy()
+
+                if self.compute_wrt_feature:
+                    self.FI_local = pd.DataFrame()
+                if self.compute_wrt_observation:
+                    self.OI_local = pd.DataFrame()
 
         # Step 3: Compute sensitvity scores
-        for i in range(self.n_test):
-            if self.pred_based:
-                preds[i, self.class_to_be_explained].backward(
-                    retain_graph=True)
+        if self.comp_global:
+            if self.loss_based and not self.pred_based:
+                loss.backward(retain_graph=True)
 
                 if self.compute_wrt_feature:
-                    # Sensitivity as Feature Effects (FE_local)
-                    X_test_grads = torch.nan_to_num(
-                        temp_grads["X_test"].squeeze()[i, :], nan=0)
-                    temp_FE = pd.Series(X_test_grads.numpy()).abs()
-                    self.FE_local = pd.concat([self.FE_local, pd.DataFrame([temp_FE])],
-                                              ignore_index=True)
+                    # Sensitivity as Feature Importance (FI_global)
+                    for i in range(self.n_test):
+                        X_test_grads = torch.nan_to_num(
+                            temp_grads["X_test"].squeeze()[i, :], nan=0)
+                        # Always positive since FI measure (intensity of effect on loss more important than direction)
+                        temp_FI = pd.Series(X_test_grads.numpy()).abs()
+                        self.FI_local = pd.concat([self.FI_local, pd.DataFrame([temp_FI])],
+                                                ignore_index=True)
+                        
+                    self.FI_local.columns = ["Sens_FI_" + feat_name for feat_name in self.data.feature_names]
+                        
+                    self.FI_global = self.FI_local.mean(axis=0)
 
                 if self.compute_wrt_observation:
-                    # Sensitivity as Observation Effects (OE_local)
+                    # Sensitivity as Observation Importance (OI_global)
                     X_train_grads = torch.nan_to_num(
                         temp_grads["X_train"].squeeze(), nan=0)
-                    sensitivity_x_train = torch.norm(X_train_grads, p=2, dim=1)
                     # Always positive due to norm.
-                    temp_OE = pd.Series(sensitivity_x_train.numpy()).abs()
-                    self.OE_local = pd.concat([self.OE_local, pd.DataFrame([temp_OE])],
-                                              ignore_index=True)
-                    # / temp_OE.sum() => Do not divide gradients by denominator, because otherwise every observation gets the same weight again
-                    # But we want gradients per observation to have different weights depending on whether the classification was correct or not
+                    sensitivity_x_train = torch.norm(X_train_grads, p=2, dim=1)
+                    self.OI_global = pd.Series(sensitivity_x_train.numpy()).abs()
+                    self.OI_global.index= ["Sens_OI_" + str(i) for i in range(self.n_train)]
+
+        else:
+            for i in range(self.n_test):
+                if self.pred_based:
+                    preds[i, self.class_to_be_explained].backward(
+                        retain_graph=True)
+
+                    if self.compute_wrt_feature:
+                        # Sensitivity as Feature Effects (FE_local)
+                        X_test_grads = torch.nan_to_num(
+                            temp_grads["X_test"].squeeze()[i, :], nan=0)
+                        temp_FE = pd.Series(X_test_grads.numpy()).abs()
+                        self.FE_local = pd.concat([self.FE_local, pd.DataFrame([temp_FE])],
+                                                ignore_index=True)
+
+                    if self.compute_wrt_observation:
+                        # Sensitivity as Observation Effects (OE_local)
+                        X_train_grads = torch.nan_to_num(
+                            temp_grads["X_train"].squeeze(), nan=0)
+                        sensitivity_x_train = torch.norm(X_train_grads, p=2, dim=1)
+                        # Always positive due to norm.
+                        temp_OE = pd.Series(sensitivity_x_train.numpy()).abs()
+                        self.OE_local = pd.concat([self.OE_local, pd.DataFrame([temp_OE])],
+                                                ignore_index=True)
+                        # / temp_OE.sum() => Do not divide gradients by denominator, because otherwise every observation gets the same weight again
+                        # But we want gradients per observation to have different weights depending on whether the classification was correct or not
+
+                if self.loss_based:
+                    loss[i].backward(retain_graph=True)
+
+                    if self.compute_wrt_feature:
+                        # Sensitivity as Feature Importance (FI_local)
+                        X_test_grads = torch.nan_to_num(
+                            temp_grads["X_test"].squeeze()[i, :], nan=0)
+                        # Always positive since FI measure (intensity of effect on loss more important than direction)
+                        temp_FI = pd.Series(X_test_grads.numpy()).abs()
+                        self.FI_local = pd.concat([self.FI_local, pd.DataFrame([temp_FI])],
+                                                ignore_index=True)
+
+                    if self.compute_wrt_observation:
+                        # Sensitivity as Observation Importance (OI_local)
+                        X_train_grads = torch.nan_to_num(
+                            temp_grads["X_train"].squeeze(), nan=0)
+                        # Always positive due to norm.
+                        sensitivity_x_train = torch.norm(X_train_grads, p=2, dim=1)
+                        temp_OI = pd.Series(sensitivity_x_train.numpy()).abs()
+                        self.OI_local = pd.concat([self.OI_local, pd.DataFrame([temp_OI])],
+                                                ignore_index=True)
+
+            # Rename columns
+            if self.pred_based:
+                if self.compute_wrt_feature:
+                    self.FE_local.columns = [
+                        "Sens_FE_" + feat_name for feat_name in self.data.feature_names]
+                if self.compute_wrt_observation:
+                    self.OE_local.columns = ["Sens_OE_" +
+                                            str(i) for i in range(self.n_train)]
 
             if self.loss_based:
-                loss[i].backward(retain_graph=True)
-
                 if self.compute_wrt_feature:
-                    # Sensitivity as Feature Importance (FI_local)
-                    X_test_grads = torch.nan_to_num(
-                        temp_grads["X_test"].squeeze()[i, :], nan=0)
-                    # Always positive since FI measure (intensity of effect on loss more important than direction)
-                    temp_FI = pd.Series(X_test_grads.numpy()).abs()
-                    self.FI_local = pd.concat([self.FI_local, pd.DataFrame([temp_FI])],
-                                              ignore_index=True)
-
+                    self.FI_local.columns = [
+                        "Sens_FI_" + feat_name for feat_name in self.data.feature_names]
                 if self.compute_wrt_observation:
-                    # Sensitivity as Observation Importance (OI_local)
-                    X_train_grads = torch.nan_to_num(
-                        temp_grads["X_train"].squeeze(), nan=0)
-                    # Always positive due to norm.
-                    sensitivity_x_train = torch.norm(X_train_grads, p=2, dim=1)
-                    temp_OI = pd.Series(sensitivity_x_train.numpy()).abs()
-                    self.OI_local = pd.concat([self.OI_local, pd.DataFrame([temp_OI])],
-                                              ignore_index=True)
+                    self.OI_local.columns = ["Sens_OI_" +
+                                            str(i) for i in range(self.n_train)]
 
-        # Rename columns
-        if self.pred_based:
-            if self.compute_wrt_feature:
-                self.FE_local.columns = [
-                    "Sens_FE_" + feat_name for feat_name in self.data.feature_names]
-            if self.compute_wrt_observation:
-                self.OE_local.columns = ["Sens_OE_" +
-                                         str(i) for i in range(self.n_train)]
+            # Step 4: Obtain global measures
+            if self.pred_based:
+                if self.compute_wrt_feature:
+                    self.FE_global = self.FE_local.mean(axis=0)
+                if self.compute_wrt_observation:
+                    self.OE_global = self.OE_local.mean(axis=0)
 
-        if self.loss_based:
-            if self.compute_wrt_feature:
-                self.FI_local.columns = [
-                    "Sens_FI_" + feat_name for feat_name in self.data.feature_names]
-            if self.compute_wrt_observation:
-                self.OI_local.columns = ["Sens_OI_" +
-                                         str(i) for i in range(self.n_train)]
-
-        # Step 4: Obtain global measures
-        if self.pred_based:
-            if self.compute_wrt_feature:
-                self.FE_global = self.FE_local.mean(axis=0)
-            if self.compute_wrt_observation:
-                self.OE_global = self.OE_local.mean(axis=0)
-
-        if self.loss_based:
-            if self.compute_wrt_feature:
-                self.FI_global = self.FI_local.mean(axis=0)
-            if self.compute_wrt_observation:
-                self.OI_global = self.OI_local.mean(axis=0)
+            if self.loss_based:
+                if self.compute_wrt_feature:
+                    self.FI_global = self.FI_local.mean(axis=0)
+                if self.compute_wrt_observation:
+                    self.OI_global = self.OI_local.mean(axis=0)
 
     def get_FI(self,
                local: bool = False,
@@ -351,6 +421,7 @@ class Sensitivity(TabPFN_Interpret):
         Raises:            
             Exception: If the specified path to save the results does not work.
             Exception: If fit() was not conducted with compute_wrt_observation= True and pred_based= True.
+            Exception: If local= True and fit() has been executed with comp_global= True.
 
         Returns:
             Union[pd.Series, pd.DataFrame]: Either a pd.Series with Sensitivity OI scores per train observation (if global) 
@@ -358,15 +429,19 @@ class Sensitivity(TabPFN_Interpret):
        """
         try:
             if local:
-                if save_to_path is not None:
-                    try:
-                        if not os.path.exists(os.path.dirname(save_to_path)):
-                            os.makedirs(os.path.dirname(save_to_path))
-                        self.OI_local.to_csv(save_to_path)
-                    except:
-                        raise ValueError(
-                            "The specified path does not work. The path should end with '.csv'.")
-                return self.OI_local
+                if self.comp_global:
+                    raise ValueError(
+                        "Cannot return local OI, since comp_global has been set to True in fit().")
+                else:
+                    if save_to_path is not None:
+                        try:
+                            if not os.path.exists(os.path.dirname(save_to_path)):
+                                os.makedirs(os.path.dirname(save_to_path))
+                            self.OI_local.to_csv(save_to_path)
+                        except:
+                            raise ValueError(
+                                "The specified path does not work. The path should end with '.csv'.")
+                    return self.OI_local
             else:
                 if save_to_path is not None:
                     try:
@@ -439,6 +514,7 @@ class Sensitivity(TabPFN_Interpret):
 
         Raises:
             Exception: If the queried configuration has not been fit.
+            Exception: If plot_pred_based= False and plot_wrt_observation= True and fit() has been executed with comp_global= True.
 
         CAUTION: May lead to numerical errors for small datasets (hennce not tested in pytests).
         """
@@ -448,9 +524,13 @@ class Sensitivity(TabPFN_Interpret):
             if plot_wrt_observation:
                 xlabel = "Training Observation"
                 if not plot_pred_based:
-                    colorbar_label = "Loss Sensitivity (OI)"
-                    local_df = self.OI_local
-                    global_df = self.OI_global
+                    if self.comp_global:
+                        raise ValueError(
+                            "Cannot plot based on local OI, since comp_global has been set to True in fit().")
+                    else:
+                        colorbar_label = "Loss Sensitivity (OI)"
+                        local_df = self.OI_local
+                        global_df = self.OI_global
                 else:
                     colorbar_label = "Prediction Sensitivity (OE)"
                     local_df = self.OE_local
@@ -524,13 +604,19 @@ class Sensitivity(TabPFN_Interpret):
 
         Raises:
             Exception: If the queried configuration has not been fit.
+            Exception: If plot_pred_based= False and plot_wrt_observation= True and fit() has been executed with comp_global= True.
+
         """
         try:
             if plot_wrt_observation:
                 xlabel = "Training Observation"
                 if not plot_pred_based:
-                    ylabel = "Loss abs. Gradient"
-                    local_df = self.OI_local
+                    if self.comp_global:
+                        raise ValueError(
+                            "Cannot plot based on local OI, since comp_global has been set to True in fit().")
+                    else:
+                        ylabel = "Loss abs. Gradient"
+                        local_df = self.OI_local
                 else:
                     ylabel = "Prediction abs. Gradient"
                     local_df = self.OE_local
