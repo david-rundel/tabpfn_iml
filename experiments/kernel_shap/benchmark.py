@@ -27,16 +27,7 @@ in the tabpfniml-folder. Instead, we use experiments/kernel_shap/kernel_shap.py 
 experiments/kernel_shap/shapley.py to compute the exact and approximate versions.
 """
 
-# set correct torch device
-if not torch.backends.mps.is_available():
-    if not torch.backends.mps.is_built():
-        print("MPS not available because the current PyTorch install was not "
-              "built with MPS enabled.")
-    else:
-        print("MPS not available because the current MacOS version is not 12.3+ "
-              "and/or you do not have an MPS-enabled device on this machine.")
-
-elif torch.backends.mps.is_available():
+if torch.backends.mps.is_available():
     DEVICE = 'mps'
 
 elif torch.cuda.is_available():
@@ -61,7 +52,7 @@ else:
     max_s= 25
     runs= 25
 
-openml_id= 770 # 770, 819, 900
+openml_id= 900 # 770, 819, 900
 plot_each_run= False
 
 #Ensure reproducibility of conducted experiments across several runs
