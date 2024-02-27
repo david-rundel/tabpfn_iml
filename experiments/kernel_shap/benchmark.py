@@ -1,3 +1,9 @@
+# TO DELETE
+import sys
+# sys.path.append(
+#     '/Users/juli/Documents/SoSe_23/Consulting/publication/tabpfn_iml')
+sys.path.append('/Users/davidrundel/git/tabpfn_iml/')
+
 from experiments.kernel_shap.kernel_shap import Kernel_SHAP
 from experiments.kernel_shap.exact_shapley import Shapley_Exact
 from tabpfniml.datasets.datasets import OpenMLData
@@ -7,13 +13,6 @@ import pickle
 import datetime
 import pandas as pd
 import numpy as np
-import sys
-
-# TO DELETE
-sys.path.append(
-    '/Users/juli/Documents/SoSe_23/Consulting/publication/tabpfn_iml')
-# sys.path.append('/Users/davidrundel/git/tabpfn_iml/')
-
 
 """
 Python script to conduct the numerical experiments outlined in section '4.2 Kernel SHAP' of the paper.
@@ -40,10 +39,10 @@ print(f"Using device: {DEVICE}")
 # Set experiment specific HPs
 debug = False
 if debug:
-    n_train = 64  # At least > p
-    n_test = 16  # At least 2
-    max_L = 4  # At least 2
-    runs = 5  # At least 2
+    n_train = 8  # At least > p
+    n_test = 8  # At least 2
+    max_L = 2  # At least 2
+    runs = 2  # At least 2
 
 else:
     n_train = 256
@@ -51,7 +50,7 @@ else:
     max_L = 25
     runs = 25
 
-openml_id = 900  # Considered datasets in paper: 770, 819, 900
+openml_id = 819  # Considered datasets in paper: 770, 819, 900
 
 # Ensure reproducibility of conducted experiments across several runs
 random.seed(42)
