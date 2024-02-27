@@ -29,7 +29,7 @@ can be fit in a single TabPFN forward pass based on the average relevance scores
 #del if mean 0 or 4 statement
 
 
-experiment_runs= 1
+experiment_runs= 5
 
 random.seed(42)
 experiment_seeds= [random.randint(1, 10000) for _ in range(experiment_runs)]
@@ -37,9 +37,9 @@ experiment_seeds= [random.randint(1, 10000) for _ in range(experiment_runs)]
 def optimize_training_set(openml_id: int = 819,
                           experiment_seed: int = 728,
                           max_forward_pass: int= 256, #Specify the amount of data that can be processed in TabPFN forward passes (based on the utilized harware, this can also be lower than 1024)
-                          multiple_of_fp: int= 8, #Multiple of forward pass size to consider
-                          val_set_size= 256, 
-                          test_set_size=156,
+                          multiple_of_fp: int= 5, #Multiple of forward pass size to consider
+                          val_set_size= 128, 
+                          test_set_size=128,
                           internal_runs= 10,
                           compare_accuracy= True
                           ):
@@ -110,36 +110,42 @@ def optimize_training_set(openml_id: int = 819,
                             loss_based= True,
                             comp_global = True)
 
-            sens_scores[train_chunk ,run]= softmax(sensitivity.OI_global.values)
+            sens_scores[train_chunk ,run]= sensitivity.OI_global.values #softmax() #wegen softmax immer 0.00
 
-    best_train_samples= np.argsort(sens_scores.mean(axis=1))[:max_forward_pass]#[-max_forward_pass:]
+    best_train_samples_1= np.argsort(sens_scores.mean(axis=1))[:max_forward_pass]
+    best_train_samples_2= np.argsort(sens_scores.mean(axis=1))[-max_forward_pass:] #even worse (highest sens)
 
     if compare_accuracy:
+        criterion = torch.nn.CrossEntropyLoss(reduction='mean')
+
         #Compare random subset against optimized subset
         sensitivity.classifier.fit(X_train_tensor[:max_forward_pass,:], 
                                 y_train_tensor[:max_forward_pass])
         preds_random_train = sensitivity.classifier.predict_proba(X_test_tensor)
-        preds_random_train_hard = sensitivity.classifier.classes_.take(np.asarray(np.argmax(preds_random_train, axis=-1), dtype=np.intp))
-        acc_random_train= accuracy_score(y_test_tensor, preds_random_train_hard)
+        loss_random_train = criterion(preds_random_train, y_test_tensor)  # .detach().numpy()
+        # preds_random_train_hard = sensitivity.classifier.classes_.take(np.asarray(np.argmax(preds_random_train, axis=-1), dtype=np.intp))
+        # acc_random_train= accuracy_score(y_test_tensor, preds_random_train_hard)
 
-        sensitivity.classifier.fit(X_train_tensor[best_train_samples,:], 
-                                y_train_tensor[best_train_samples])
-        preds_opt_train = sensitivity.classifier.predict_proba(X_test_tensor)
-        preds_opt_train_hard = sensitivity.classifier.classes_.take(np.asarray(np.argmax(preds_opt_train, axis=-1), dtype=np.intp))
-        acc_opt_train= accuracy_score(y_test_tensor, preds_opt_train_hard)
+        sensitivity.classifier.fit(X_train_tensor[best_train_samples_1,:], 
+                                y_train_tensor[best_train_samples_1])
+        preds_opt_train_1 = sensitivity.classifier.predict_proba(X_test_tensor)
+        loss_random_train_1 = criterion(preds_opt_train_1, y_test_tensor)  # .detach().numpy()
+        # preds_opt_train_hard = sensitivity.classifier.classes_.take(np.asarray(np.argmax(preds_opt_train, axis=-1), dtype=np.intp))
+        # acc_opt_train= accuracy_score(y_test_tensor, preds_opt_train_hard)
 
-        print(acc_random_train)
-        print(acc_opt_train)
-        print("--")
+        sensitivity.classifier.fit(X_train_tensor[best_train_samples_2,:], 
+                                y_train_tensor[best_train_samples_2])
+        preds_opt_train_2 = sensitivity.classifier.predict_proba(X_test_tensor)
+        loss_random_train_2 = criterion(preds_opt_train_2, y_test_tensor)  # .detach().numpy()
 
-    return best_train_samples
+    return best_train_samples_1, {"acc_random_train_set": loss_random_train, "acc_optimized_train_set_1": loss_random_train_1, "acc_optimized_train_set_2": loss_random_train_2}, sens_scores
+
+experiment_results= []
+sens_scores= []
 
 for experiment_run in range(experiment_runs):
-    optimize_training_set(openml_id= 819,
-                          experiment_seed= experiment_seeds[experiment_run])
+    best_train_samples, acc_dict, temp_sens_scores= optimize_training_set(openml_id= 819, experiment_seed= experiment_seeds[experiment_run])
+    experiment_results.append(acc_dict)
+    sens_scores.append(temp_sens_scores)
 
-# 0.859375
-# 0.515625
-    
-# 0.8461538461538461
-# 0.10897435897435898
+print(experiment_results)
