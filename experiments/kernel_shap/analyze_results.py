@@ -104,7 +104,7 @@ for openml_id, temp_exp_results in exp_results.items():
 
     # Compute the amount of token connections for exact marginalization
     temp_stacked_results_exact["Token_Connections"] = (
-        (n_train ** 2) * temp_stacked_results_appr["M"]) + (n_train * n_inf * temp_stacked_results_appr["M"])
+        (n_train ** 2) * temp_stacked_results_exact["M"]) + (n_train * n_inf * temp_stacked_results_exact["M"])
 
     # Combine results
     temp_stacked_results = pd.concat(

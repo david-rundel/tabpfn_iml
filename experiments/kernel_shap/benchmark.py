@@ -50,7 +50,7 @@ else:
     max_L = 25
     runs = 25
 
-openml_id = 819  # Considered datasets in paper: 770, 819, 900
+openml_id = 770  # Considered datasets in paper: 770, 819, 900
 
 # Ensure reproducibility of conducted experiments across several runs
 random.seed(42)
@@ -159,7 +159,7 @@ experiment_results = {"error_exact_marginalization_per_run": error_exact_marg_ru
                       "train_indices_per_run": random_train_indices,
                       "experiment_hyperparameters": {"n_train": n_train,
                                                      "n_test": n_test,
-                                                     "max_s": max_L,
+                                                     "max_L": max_L,
                                                      "debug": debug,
                                                      "runs": runs,
                                                      "openml_id": openml_id,

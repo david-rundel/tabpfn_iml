@@ -88,10 +88,10 @@ class Kernel_SHAP(TabPFN_Interpret):
         self.class_to_be_explained = class_to_be_explained
 
         # Specify the sizes of feature subsets that we test
-        self.K_min = self.data.num_features  # To avoid n<p issues
+        self.M_min = self.data.num_features  # To avoid n<p issues
         # Sample a greater number of coalitions than the total count of distinct ones, as not every unique coalition may be included in the sampling process otherwise.
-        self.K_max = int(2 ** self.data.num_features * 2.5)
-        self.K_range = range(self.K_min, self.K_max+1)
+        self.M_max_approximate = 10 #int(2 ** self.data.num_features * 2.5)
+        self.M_max_exact = self.M_max_approximate * 10
 
         self.design_matrix = pd.DataFrame()
         self.weights = pd.Series()  # (K)
@@ -107,7 +107,7 @@ class Kernel_SHAP(TabPFN_Interpret):
             coalition_mask_bool = np.array(coalition_mask, dtype=bool)
             return coalition_mask, coalition_mask_bool
 
-        for i in range(self.K_max):
+        for m in range(self.M_max_exact):
             # Step 1: Sample K coalitions
             coalition_mask, coalition_mask_bool = get_coal()
 
@@ -144,44 +144,44 @@ class Kernel_SHAP(TabPFN_Interpret):
                                                axis=0)
 
             # Obtain data for approximate marginalization
+            if m < self.M_max_approximate:
+                # In approximate case TabPFN only needs to be fit once, since training data and features remain constant.
+                # (Although the self-attention computation seems to be repeated every time.)
+                self.classifier.fit(self.X_train, self.y_train)
 
-            # In approximate case TabPFN only needs to be fit once, since training data and features remain constant.
-            # (Although the self-attention computation seems to be repeated every time.)
-            self.classifier.fit(self.X_train, self.y_train)
+                # Marginalize out non-coalition features by taking L samples from dataset to impute values
+                preds_approximate = None
 
-            # Marginalize out non-coalition features by taking S samples from dataset to impute values
-            preds_approximate = None
+                # Iterate over MC-imputation-samples and average predicitons
+                self.random_train_indices = []
+                for j in range(max_L):
+                    X_test_imputed = self.X_test.copy()
+                    random_train_index = random.randint(0, self.X_train.shape[0]-1)
+                    X_test_imputed[:, ~coalition_mask_bool] = self.X_train[random_train_index,
+                                                                        ~coalition_mask_bool].copy()  # Broadcast
+                    temp_preds = self.classifier.predict_proba(
+                        X_test_imputed)[:, self.class_to_be_explained]  # , return_logits= True
 
-            # Iterate over MC-imputation-samples and average predicitons
-            self.random_train_indices = []
-            for j in range(max_L):
-                X_test_imputed = self.X_test.copy()
-                random_train_index = random.randint(0, self.X_train.shape[0]-1)
-                X_test_imputed[:, ~coalition_mask_bool] = self.X_train[random_train_index,
-                                                                       ~coalition_mask_bool].copy()  # Broadcast
-                temp_preds = self.classifier.predict_proba(
-                    X_test_imputed)[:, self.class_to_be_explained]  # , return_logits= True
+                    self.random_train_indices.append(random_train_index)
 
-                self.random_train_indices.append(random_train_index)
+                    if preds_approximate is not None:
+                        preds_approximate = np.column_stack(
+                            (preds_approximate, temp_preds))
 
-                if preds_approximate is not None:
-                    preds_approximate = np.column_stack(
-                        (preds_approximate, temp_preds))
+                    else:
+                        preds_approximate = temp_preds
 
-                else:
-                    preds_approximate = temp_preds
+                for j in range(max_L):
+                    # Compute the average prediction for the first j imputing samples
+                    temp_mean = preds_approximate[:, :j+1].copy().mean(axis=1)
 
-            for j in range(max_L):
-                # Compute the average prediction for the first s imputing samples
-                temp_mean = preds_approximate[:, :j+1].copy().mean(axis=1)
+                    # pred_values_approximate_marg[j+1]= pred_values_approximate_marg[j+1].append(
+                    #     pd.Series(temp_mean), ignore_index=True)
 
-                # pred_values_approximate_marg[j+1]= pred_values_approximate_marg[j+1].append(
-                #     pd.Series(temp_mean), ignore_index=True)
-
-                pred_values_approximate_marg[j+1] = pd.concat([pred_values_approximate_marg[j+1],
-                                                               pd.Series(temp_mean).to_frame().T],
-                                                              ignore_index=True,
-                                                              axis=0)
+                    pred_values_approximate_marg[j+1] = pd.concat([pred_values_approximate_marg[j+1],
+                                                                pd.Series(temp_mean).to_frame().T],
+                                                                ignore_index=True,
+                                                                axis=0)
 
         def get_SHAP_values(temp_preds, K):
             # Step 4: Fit a weighted linear model
@@ -204,13 +204,13 @@ class Kernel_SHAP(TabPFN_Interpret):
 
         # Compute Kernel SHAP for exact marginalization
         self.SHAP_exact_marg = {}
-        for i in self.K_range:
-            self.SHAP_exact_marg[i] = get_SHAP_values(
-                pred_values_exact_marg, K=i)
+        for m in range(self.M_min, self.M_max_exact+1):
+            self.SHAP_exact_marg[m] = get_SHAP_values(
+                pred_values_exact_marg, K=m)
 
         # Compute Kernel SHAP for approximate marginalization
         self.SHAP_approximate_marg = {}
-        for i in self.K_range:
+        for m in range(self.M_min, self.M_max_approximate+1):
             for j in range(1, max_L+1):
-                self.SHAP_approximate_marg[(i, j)] = get_SHAP_values(
-                    pred_values_approximate_marg[j], K=i)
+                self.SHAP_approximate_marg[(m, j)] = get_SHAP_values(
+                    pred_values_approximate_marg[j], K=m)
