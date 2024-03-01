@@ -24,7 +24,7 @@ class Data_Shapley(TabPFN_Interpret):
     """
 
     def __init__(self,
-                 optimize_context: bool = False,
+                 optimize_context: bool = True,
                  openml_id: int = 819,
                  n_train: int = 1024,
                  n_val: int = 512,
@@ -41,7 +41,7 @@ class Data_Shapley(TabPFN_Interpret):
         used to explain the influence of observations from the train set.
 
         Args:
-            optimize_context (bool, optional): Whether the context/training data shall be optimized to maximize TabPFNs performance on the dataset. If True, it requires an additional validation set. Defaults to False.
+            optimize_context (bool, optional): Whether the context/training data shall be optimized to maximize TabPFNs performance on the dataset. If True, it requires an additional validation set. Defaults to True.
             openml_id (int, optional): The OpenML dataset that TabPFN's behavior shall be explained for. Defaults to 770. Currently only implemented for OpenML datasets.
             n_train (int, optional): The amount of train-samples whose influence on TabPFNs performance shall be explained. May also be larger than 1024, if context optimization is conducted. Defaults to 1024.
             n_val (int, optional):  The size of a validation set on which TabPFNs performance shall be explained. Defaults to 512.
@@ -62,10 +62,6 @@ class Data_Shapley(TabPFN_Interpret):
         np.random.seed(self.seed)
 
         if self.optimize_context:
-            if self.n_train < 1024:
-                raise ValueError(
-                    "There is no need for context optimization, since the entire dataset fits in a single TabPFN  forward pass.")
-
             n_test_full = n_val + n_test
             data_init = OpenMLData(openml_id,
                                    avoid_pruning=True,
@@ -82,7 +78,7 @@ class Data_Shapley(TabPFN_Interpret):
                 "The specified OpenML has to few entries for the specified dataset sizes.")
 
         super().__init__(data=data_init,
-                         n_train=self.n_train
+                         n_train=self.n_train,
                          n_test=n_test_full,
                          N_ensemble_configurations=N_ensemble_configurations,
                          device=device,
@@ -142,11 +138,12 @@ class Data_Shapley(TabPFN_Interpret):
         self.tPFN_train_max = tPFN_train_max
         self.class_to_be_explained = class_to_be_explained
 
-        if self.debug:
-            self.M = 32
-        else:
-            self.M = int(self.n_train * self.M_factor)
+        if self.optimize_context:
+            if self.n_train < self.tPFN_train_max:
+                raise ValueError(
+                    "There is no need for context optimization, since the entire dataset fits in a single TabPFN  forward pass.")
 
+        self.M = int(self.n_train * self.M_factor)
         assert self.X_train.shape[0] == self.n_train
         self.train_indices = list(range(self.n_train))
 
@@ -159,7 +156,7 @@ class Data_Shapley(TabPFN_Interpret):
             coal_p = float(
                 (self.tPFN_train_min + (self.tPFN_train_max-self.tPFN_train_min)*0.5)
                 / self.tPFN_train_max
-                * (self.n_train / self.tPFN_train_max)
+                / (self.n_train / self.tPFN_train_max)
             )
 
             def get_coal():
@@ -169,6 +166,8 @@ class Data_Shapley(TabPFN_Interpret):
                 return coalition_mask, coalition_mask_bool
 
             for m in range(self.M):
+                print(str(m) + "/" + str(self.M))
+                print("---")
                 # Step 1: Sample M observation coalitions
                 coalition_mask, coalition_mask_bool = get_coal()
 
@@ -177,7 +176,7 @@ class Data_Shapley(TabPFN_Interpret):
                     coalition_mask, coalition_mask_bool = get_coal()
 
                 weight = get_kernel_weight(
-                    coalition_mask.sum(), 1024)
+                    coalition_mask.sum(), self.tPFN_train_max)
 
                 # Step 2: Transfer coalitions into observations space and get predictions by applying TabPFN.
                 X_train_coal = self.X_train[coalition_mask_bool, :].copy()
@@ -185,7 +184,7 @@ class Data_Shapley(TabPFN_Interpret):
 
                 self.classifier.fit(X_train_coal, y_train_coal)
                 preds = self.classifier.predict_proba(self.X_val.copy())
-                loss = criterion(torch.tensor(preds), torch.tensor(
+                loss = self.criterion(torch.tensor(preds), torch.tensor(
                     self.y_val.copy(), dtype=torch.long))
 
                 loss_values = pd.concat([loss_values, pd.DataFrame([loss.item()])],
@@ -244,13 +243,13 @@ class Data_Shapley(TabPFN_Interpret):
                 "To obtain data values, execute fit() first. At the moment, it is also required to call init() with optimize_context= True, since the alternative option is not implemented yet.")
 
     def get_optimized_context(self,
-                              size: int = 1024) -> List:
+                              size= None) -> List:
         """
         Returns a list with the training set indices of the most relevant training observations according to Data Shapley.
         Together, they constitute an optimized context.
 
         Args:
-            size (int, optional): The size of the optimized context. Defaults to 1024.
+            size (optional): The size of the optimized context. Defaults to None, setting it equal to self.tPFN_train_max.
 
         Raises:
             ValueError: If the queried context size is larger than the maximal amount of training observations for a TabPFN forward pass.
@@ -260,9 +259,12 @@ class Data_Shapley(TabPFN_Interpret):
             List: The indices of the most relevant training observations.
         """
         try:
-            if size > self.tPFN_train_max:
-                raise ValueError(
-                    "Optimized context cannot be larger than maximal amount of training observations for a TabPFN forward pass.")
+            if size != None:
+                if size > self.tPFN_train_max:
+                    raise ValueError(
+                        "Optimized context cannot be larger than maximal amount of training observations for a TabPFN forward pass.")
+            else:
+                size= self.tPFN_train_max
             return self.data_values.nsmallest(size).index.tolist()
 
         except:
@@ -284,18 +286,19 @@ class Data_Shapley(TabPFN_Interpret):
         Returns:
             Dict: Dict containing information about the performance difference of optimized and random contexts on the test set.
         """
+
         try:
             random_losses = []
             random_accs = []
 
-            # Obtain Loss and Accuracy for multiple random contexts
+            #Obtain Loss and Accuracy for multiple random contexts
             amount_random_train_sets = math.floor(
                 self.n_train / self.tPFN_train_max)
             for i in range(amount_random_train_sets):
-                temp_X_train = self.X_train[i * self.tPFN_train_max: i +
-                                            1 * self.tPFN_train_max, :].copy()
-                temp_y_train = self.y_train[i *
-                                            self.tPFN_train_max: i+1 * self.tPFN_train_max].copy()
+                temp_X_train = self.X_train[i * self.tPFN_train_max: 
+                                            (i + 1) * self.tPFN_train_max, :].copy()
+                temp_y_train = self.y_train[i * self.tPFN_train_max: 
+                                            (i + 1) * self.tPFN_train_max].copy()
 
                 self.classifier.fit(temp_X_train, temp_y_train)
                 temp_preds = self.classifier.predict_proba(self.X_test.copy())
@@ -308,14 +311,14 @@ class Data_Shapley(TabPFN_Interpret):
                 temp_acc = accuracy_score(torch.tensor(
                     self.y_test.copy(), dtype=torch.long), temp_preds_hard)
 
-                random_losses.append(temp_loss)
+                random_losses.append(temp_loss.item())
                 random_accs.append(temp_acc)
 
             # Obtain Loss and Accuracy for optimized context
-            X_train_opt = self.X_train[self.data_values.nsmallest(
-                self.tPFN_train_max).index.tolist(), :].copy()
-            y_train_opt = self.y_train[self.data_values.nsmallest(
-                self.tPFN_train_max).index.tolist()].copy()
+            opt_indices= self.data_values.nsmallest(
+                self.tPFN_train_max).index.tolist()
+            X_train_opt = self.X_train[opt_indices, :].copy()
+            y_train_opt = self.y_train[opt_indices].copy()
 
             self.classifier.fit(X_train_opt, y_train_opt)
             preds_opt = self.classifier.predict_proba(self.X_test.copy())
@@ -330,20 +333,19 @@ class Data_Shapley(TabPFN_Interpret):
 
             results_dict = {}
             results_dict["Random Context"] = {"Mean Loss": np.mean(random_losses),
-                                              "Mean_Acc": np.mean(random_accs),
-                                              "Std_Loss": np.std(random_losses),
-                                              "Std_Acc": np.std(random_accs),
-                                              "Detailed_Loss": random_losses,
-                                              "Detailed_Acc": random_accs}
+                                                "Mean_Acc": np.mean(random_accs),
+                                                "Std_Loss": np.std(random_losses),
+                                                "Std_Acc": np.std(random_accs),
+                                                "Detailed_Loss": random_losses,
+                                                "Detailed_Acc": random_accs}
 
-            results_dict["Random Context"] = {"Loss": loss_opt,
-                                              "Acc": acc_opt}
+            results_dict["Optimized Context"] = {"Loss": loss_opt.item(),
+                                                "Acc": acc_opt}
 
             if save_to_path is not None:
                 try:
                     if not os.path.exists(os.path.dirname(save_to_path)):
                         os.makedirs(os.path.dirname(save_to_path))
-                    self.results_dict.to_csv(save_to_path)
 
                     with open(save_to_path, 'wb') as file:
                         pickle.dump(results_dict, file)
