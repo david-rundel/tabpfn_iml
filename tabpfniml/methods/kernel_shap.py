@@ -23,11 +23,13 @@ class SHAP(TabPFN_Interpret):
     In this implementation, SHAP values explain the difference from the model prediction when using no features at all (this corresponds to the 
     OCM with the respective loss - e.g. the fraction of observations with the class to be explained as label in the training data for the CE-Loss).
 
+    This class can also be used to estimate SAGE values, explaining the effect of features on the test set performance. 
+
     Kernel SHAP is way more efficient than regular Shapley, since for every coalition the effect of all features in the coalition on the model
     prediction is estimated and not just the surplus contribution of one feature.
 
     Compared to the SHAP-package from Scott Lundberg (iml/methods/shap_package.py, https://shap.readthedocs.io/en/latest/index.html) it does not offer 
-    a big variety of plots, however it is designed to be more exact and performant in combination with TabPFN.
+    a big variety of plots, however it is designed to be more exact and performant in combination with TabPFN (Exact Feature Marginalization).
     While the SHAP-package predicts for each test sample and feature coalition separately, this implementation iterates over feature coalitions 
     and predicts for all test samples at once.
 
@@ -245,7 +247,7 @@ class SHAP(TabPFN_Interpret):
         if self.loss_based:
             # Statsmodels implementation better suited to extract test-statistics for SAGE values
             # SAGE values does not require multi-label-regression
-            design_matrix = sm.add_constant(design_matrix)
+            design_matrix = sm.add_constant(design_matrix, prepend= True)
             if self.apply_WLS:
                 lm = sm.WLS(loss_values, design_matrix, weights=weights)
                 self.lm_res = lm.fit()

@@ -38,6 +38,7 @@ This package provides the following methods:
 |----------------------------------------|----------------------------------------|---------|
 | Leave-One-Out (LOO)                    | `tabpfniml/methods/loco.py`            | Global  |
 | Sensitivity Analysis                   | `tabpfniml/methods/sensitivity.py`     | Global  |
+| Data Shapley                           | `tabpfniml/methods/data_shapley.py`    | Global  |
 
 
 ### Local Explanations

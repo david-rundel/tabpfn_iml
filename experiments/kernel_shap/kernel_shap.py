@@ -90,7 +90,7 @@ class Kernel_SHAP(TabPFN_Interpret):
         # Specify the sizes of feature subsets that we test
         self.M_min = self.data.num_features  # To avoid n<p issues
         # Sample a greater number of coalitions than the total count of distinct ones, as not every unique coalition may be included in the sampling process otherwise.
-        self.M_max_approximate = 10 #int(2 ** self.data.num_features * 2.5)
+        self.M_max_approximate = int(2 ** self.data.num_features * 2.5)
         self.M_max_exact = self.M_max_approximate * 10
 
         self.design_matrix = pd.DataFrame()

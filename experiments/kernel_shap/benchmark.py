@@ -37,7 +37,7 @@ else:
 print(f"Using device: {DEVICE}")
 
 # Set experiment specific HPs
-debug = False
+debug = True
 if debug:
     n_train = 8  # At least > p
     n_test = 8  # At least 2

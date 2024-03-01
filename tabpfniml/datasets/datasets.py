@@ -288,7 +288,7 @@ class OpenMLData(dataset_iml):
         
         # Set project_dir to current directory or any specific directory as a placeholder
         self.project_dir = Path.cwd()
-        self.max_n_train= 1024
+        self.max_n_train= (1024 if not avoid_pruning else self.num_samples)
 
         # No need to call super().__init__() as we're directly initializing everything here
         # The original intent of calling super().__init__() was to load and process the file, which we've bypassed
