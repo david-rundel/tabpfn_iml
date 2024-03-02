@@ -200,13 +200,26 @@ class Data_Shapley(TabPFN_Interpret):
                                     axis=0)
 
             # Step 4: Fit a weighted linear model
+            # Also, we track the performance of context optimization w.r.t m
             design_matrix = sm.add_constant(design_matrix, prepend=True)
-            lm = sm.WLS(loss_values, design_matrix, weights=weights)
-            self.lm_res = lm.fit()
 
-            # Step 5: Extract Data values values
-            self.data_values = pd.Series(
-                np.array(self.lm_res.params[1:]), index=self.train_indices)
+            self.data_values = {}
+            self.m_range = [2**x for x in range(4, 16)]
+            if self.M not in self.m_range:
+                self.m_range.append(self.M)
+
+            for m in self.m_range:
+                if m >= 16 and m <= self.M:
+                    lm = sm.WLS(loss_values.iloc[0:m],
+                                design_matrix.iloc[0:m, :],
+                                weights=weights.iloc[0:m])
+                    self.lm_res = lm.fit()
+
+                    # Step 5: Extract Data values values
+                    self.data_values[m] = pd.Series(
+                        np.array(self.lm_res.params[1:]), index=self.train_indices)
+                else:
+                    pass
 
         else:
             raise ValueError("Not implemented yet.")
@@ -233,17 +246,17 @@ class Data_Shapley(TabPFN_Interpret):
                 try:
                     if not os.path.exists(os.path.dirname(save_to_path)):
                         os.makedirs(os.path.dirname(save_to_path))
-                    self.data_values.to_csv(save_to_path)
+                    self.data_values[self.M].to_csv(save_to_path)
                 except:
                     raise ValueError(
                         "The specified path does not work. The path should end with '.csv'.")
-            return self.data_values
+            return self.data_values[self.M]
         except:
             raise Exception(
                 "To obtain data values, execute fit() first. At the moment, it is also required to call init() with optimize_context= True, since the alternative option is not implemented yet.")
 
     def get_optimized_context(self,
-                              size= None) -> List:
+                              size=None) -> List:
         """
         Returns a list with the training set indices of the most relevant training observations according to Data Shapley.
         Together, they constitute an optimized context.
@@ -264,8 +277,8 @@ class Data_Shapley(TabPFN_Interpret):
                     raise ValueError(
                         "Optimized context cannot be larger than maximal amount of training observations for a TabPFN forward pass.")
             else:
-                size= self.tPFN_train_max
-            return self.data_values.nsmallest(size).index.tolist()
+                size = self.tPFN_train_max
+            return self.data_values[self.M].nsmallest(size).index.tolist()
 
         except:
             raise Exception(
@@ -277,7 +290,7 @@ class Data_Shapley(TabPFN_Interpret):
         Compare the performance of an optimized context to random contexts on the previously unseen test set.
 
         Args:
-            save_to_path (Optional[str], optional): If provided, save the dict to the specified path. Should end with '.pkl'. Defaults to None.
+            save_to_path (Optional[str], optional): If provided, save the dict to the specified path. Should end with '.csv'. Defaults to None.
 
         Raises:
             Exception: If the specified path to save the results does not work.
@@ -291,13 +304,22 @@ class Data_Shapley(TabPFN_Interpret):
             random_losses = []
             random_accs = []
 
-            #Obtain Loss and Accuracy for multiple random contexts
+            results_dict = {"seed": [],
+                            "M": [],
+                            "RC Mean Loss": [],
+                            "RC Mean Acc": [],
+                            "RC Std Loss": [],
+                            "RC Std Acc": [],
+                            "OC Loss": [],
+                            "OC Acc": []}
+
+            # Obtain Loss and Accuracy for multiple random contexts
             amount_random_train_sets = math.floor(
                 self.n_train / self.tPFN_train_max)
             for i in range(amount_random_train_sets):
-                temp_X_train = self.X_train[i * self.tPFN_train_max: 
+                temp_X_train = self.X_train[i * self.tPFN_train_max:
                                             (i + 1) * self.tPFN_train_max, :].copy()
-                temp_y_train = self.y_train[i * self.tPFN_train_max: 
+                temp_y_train = self.y_train[i * self.tPFN_train_max:
                                             (i + 1) * self.tPFN_train_max].copy()
 
                 self.classifier.fit(temp_X_train, temp_y_train)
@@ -314,46 +336,50 @@ class Data_Shapley(TabPFN_Interpret):
                 random_losses.append(temp_loss.item())
                 random_accs.append(temp_acc)
 
-            # Obtain Loss and Accuracy for optimized context
-            opt_indices= self.data_values.nsmallest(
-                self.tPFN_train_max).index.tolist()
-            X_train_opt = self.X_train[opt_indices, :].copy()
-            y_train_opt = self.y_train[opt_indices].copy()
+            # Obtain Loss and Accuracy for optimized contexts
+            for m in self.m_range:
+                if m >= 16 and m <= self.M:
+                    opt_indices = self.data_values[m].nsmallest(
+                        self.tPFN_train_max).index.tolist()
+                    X_train_opt = self.X_train[opt_indices, :].copy()
+                    y_train_opt = self.y_train[opt_indices].copy()
 
-            self.classifier.fit(X_train_opt, y_train_opt)
-            preds_opt = self.classifier.predict_proba(self.X_test.copy())
+                    self.classifier.fit(X_train_opt, y_train_opt)
+                    preds_opt = self.classifier.predict_proba(
+                        self.X_test.copy())
 
-            loss_opt = self.criterion(torch.tensor(preds_opt), torch.tensor(
-                self.y_test.copy(), dtype=torch.long))
+                    loss_opt = self.criterion(torch.tensor(preds_opt), torch.tensor(
+                        self.y_test.copy(), dtype=torch.long))
 
-            preds_opt_hard = self.classifier.classes_.take(
-                np.asarray(np.argmax(preds_opt, axis=-1), dtype=np.intp))
-            acc_opt = accuracy_score(torch.tensor(
-                self.y_test.copy(), dtype=torch.long), preds_opt_hard)
+                    preds_opt_hard = self.classifier.classes_.take(
+                        np.asarray(np.argmax(preds_opt, axis=-1), dtype=np.intp))
+                    acc_opt = accuracy_score(torch.tensor(
+                        self.y_test.copy(), dtype=torch.long), preds_opt_hard)
 
-            results_dict = {}
-            results_dict["Random Context"] = {"Mean Loss": np.mean(random_losses),
-                                                "Mean_Acc": np.mean(random_accs),
-                                                "Std_Loss": np.std(random_losses),
-                                                "Std_Acc": np.std(random_accs),
-                                                "Detailed_Loss": random_losses,
-                                                "Detailed_Acc": random_accs}
+                    results_dict["seed"].append(self.seed)
+                    results_dict["M"].append(m)
+                    results_dict["RC Mean Loss"].append(np.mean(random_losses))
+                    results_dict["RC Mean Acc"].append(np.mean(random_accs))
+                    results_dict["RC Std Loss"].append(np.std(random_losses))
+                    results_dict["RC Std Acc"].append(np.std(random_accs))
+                    results_dict["OC Loss"].append(loss_opt.item())
+                    results_dict["OC Acc"].append(acc_opt)
+                    # "RC Detailed_Loss": random_losses,
+                    # "RC Detailed_Acc": random_accs,
 
-            results_dict["Optimized Context"] = {"Loss": loss_opt.item(),
-                                                "Acc": acc_opt}
+            results_df = pd.DataFrame.from_dict(results_dict)
 
             if save_to_path is not None:
                 try:
                     if not os.path.exists(os.path.dirname(save_to_path)):
                         os.makedirs(os.path.dirname(save_to_path))
 
-                    with open(save_to_path, 'wb') as file:
-                        pickle.dump(results_dict, file)
+                    results_df.to_csv(save_to_path, index=True)
                 except:
                     raise ValueError(
-                        "The specified path does not work. The path should end with '.pkl'.")
+                        "The specified path does not work. The path should end with '.csv'.")
 
-            return results_dict
+            return results_df
 
         except:
             raise Exception(
