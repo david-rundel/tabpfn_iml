@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class Kernel_SHAP(TabPFN_Interpret):
     """
-    Implementation of approximate and exact feature marginalization for Kernel SHAP used in experiments/kernel_shap/benchmark.py.
+    Implementation of approximate and exact retraining/ feature marginalization for Kernel SHAP used in experiments/kernel_shap/benchmark.py.
     It is a modified version of 'tabpfniml/methods/kernel_shap.py', but more efficient when computing 
     exact and approximate feature marginalization across multiple values of M and L simultaneously.
     Also, it is limited to feature effect measures.

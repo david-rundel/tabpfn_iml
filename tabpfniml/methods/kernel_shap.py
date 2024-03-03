@@ -16,7 +16,7 @@ import os
 
 class SHAP(TabPFN_Interpret):
     """
-    Implementation of the Kernel-SHAP-method as proposed in the paper (exact feature marginalization).
+    Implementation of the Kernel-SHAP-method as proposed in the paper (exact retraining/ feature marginalization).
     Furthermore, it is based on https://slds-lmu.github.io/iml/chapters/04_shapley/04_03_shap/.
     Kernel SHAP is a model agnostic method used for explaining model predictions. 
     It estimates the Shapley values, which assign each feature's contribution to the prediction based on its interaction with other features.

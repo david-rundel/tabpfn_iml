@@ -37,9 +37,9 @@ else:
     M_factor = 3
     tPFN_train_min = 256
     tPFN_train_max = 512
-    runs = 2
+    runs = 5
 
-openml_ids = [1471, 23512]  
+openml_ids = [1471, 23512, 41147] 
 for openml_id in openml_ids:
     # Ensure reproducibility of conducted experiments across several runs
     random.seed(42)
@@ -74,6 +74,10 @@ for openml_id in openml_ids:
     formatted_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     experiment_results.to_csv('experiments/context_optimization/results/data_shapley_' +
                               str(openml_id) + '_' + formatted_datetime + '.csv', index=True)
+    
+    experiment_results_mean= experiment_results.drop(columns=["seed"]).groupby(["M"]).mean()
+    experiment_results_mean.to_csv('experiments/context_optimization/results/data_shapley_mean' +
+                              str(openml_id) + '_' + formatted_datetime + '.csv', index=True)
 
     hp_dict = {"n_train": n_train,
                "n_val": n_val,
@@ -83,7 +87,9 @@ for openml_id in openml_ids:
                "tPFN_train_max": tPFN_train_max,
                "runs": runs}
 
-    with open('experiments/context_optimization/results/data_shapley_' + str(openml_id) + '_' + formatted_datetime + '.pkl', 'wb') as file:
+    with open('experiments/context_optimization/results/data_shapley_hps_' + str(openml_id) + '_' + formatted_datetime + '.pkl', 'wb') as file:
         pickle.dump(hp_dict, file)
 
     print(experiment_results)
+
+print("Done.")
