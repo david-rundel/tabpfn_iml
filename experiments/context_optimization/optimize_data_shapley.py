@@ -39,11 +39,14 @@ else:
     tPFN_train_max = 512
     runs = 5
 
+seed_shift= 5 #Default 0. Can be used to proceed an experiment where there have already been seed_shift-many runs with different seeds.
+
+
 openml_ids = [1471, 23512, 41147] 
 for openml_id in openml_ids:
     # Ensure reproducibility of conducted experiments across several runs
     random.seed(42)
-    seeds = [random.randint(1, 10000) for _ in range(runs)]
+    seeds = [random.randint(1, 10000) for _ in range(seed_shift + runs)][seed_shift:seed_shift+runs]
 
     experiment_results = pd.DataFrame()
 
