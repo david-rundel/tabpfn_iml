@@ -76,7 +76,7 @@ for openml_id in openml_ids:
                               str(openml_id) + '_' + formatted_datetime + '.csv', index=True)
     
     experiment_results_mean= experiment_results.drop(columns=["seed"]).groupby(["M"]).mean()
-    experiment_results_mean.to_csv('experiments/context_optimization/results/data_shapley_mean' +
+    experiment_results_mean.to_csv('experiments/context_optimization/results/data_shapley_mean_' +
                               str(openml_id) + '_' + formatted_datetime + '.csv', index=True)
 
     hp_dict = {"n_train": n_train,

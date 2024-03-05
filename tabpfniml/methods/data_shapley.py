@@ -102,7 +102,7 @@ class Data_Shapley(TabPFN_Interpret):
         """
         Fits a local surrogate model (weighted linear model) to predict the empirical loss for validation samples given observation coalitions.
         The resulting surrogate model coefficients are interpreted as local Shapley values (as the loss is explained, low values are expected to enhance the predictive performance).
-        M* M_factor observation coalitions are used to estimate the effect of observations on the model performance, where each observation coalition has a size between tPFN_train_min and tPFN_train_max.
+        n_train * M_factor observation coalitions are used to estimate the effect of observations on the model performance, where each observation coalition has a size between tPFN_train_min and tPFN_train_max.
 
         Args:
             M_factor (int, optional): An integer value to specify how many observation coalitions shall be considered, where the amount of coalitions is n_train * M_factor. Must at least be 1 to avoid n<p. Defaults to 1.
