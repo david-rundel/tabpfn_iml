@@ -81,7 +81,7 @@ from tabpfniml import ICE_PD
 
 # Datasets
 
-A new dataset instance that inherits from the `dataset_iml` class must be instantiated in order to apply the IML methods. Essentially, you only need to define the `__init__()` function and please refer to `demo/consulting_datasets/datasets.py` for the structure and necessary variables. The datasets needs to be a *.csv* file and the first columns needs to be the target and the other colums the features. Categorical features need to be already converted to integer or float values, e.g., by label encoding.
+The IML methods can be applied using any dataset from the OpenML Benchmarking Suites. Alternatively, a new dataset instance that inherits from the `dataset_iml` class can be instantiated. Essentially, you only need to define the `__init__()` function and please refer to `demo/consulting_datasets/datasets.py` for the structure and necessary variables. The datasets needs to be a *.csv* file and the first columns needs to be the target and the other colums the features. Categorical features need to be already converted to integer or float values, e.g., by label encoding.
 
 ```python
 from tabpfniml import dataset_iml
@@ -92,3 +92,12 @@ class myOwnData(dataset_iml):
 
 ```
 
+# Experiments
+
+All experiments conducted in the paper can be found in this repository, enabling the straightforward replication.
+
+| Experiment                 | Paper Section    | Directory                            |
+|----------------------------|------------------|--------------------------------------|
+| ICE & PD                   | 4.1              | `experiments/ice_pd`                 |
+| Kernel SHAP                | 4.2              | `experiments/kernel_shap`            |
+| Context Optimization       | 4.3              | `experiments/context_optimization`   |
