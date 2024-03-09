@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 import openml
 
-plt.rcParams.update({'font.size': 11})
+plt.rcParams.update({'font.size': 14})
 
 """
 This file is used to generate the plots in section '4.2 Kernel SHAP' of the paper.
@@ -20,19 +20,34 @@ cmap_inverted = ListedColormap(cmap_original.colors[::-1])
 fig, axs = plt.subplots(1, 3, figsize=(12, 4), sharey=False)
 
 openml_ids = [1471, 23512, 41147]
-result_files_detailed = {1471: "experiments/context_optimization/results/data_shapley_1471_20240304_012431.csv",
-                         23512: "experiments/context_optimization/results/data_shapley_23512_20240304_120843.csv",
-                         41147: "experiments/context_optimization/results/data_shapley_41147_20240305_003107.csv"}
-result_files_mean = {1471: "experiments/context_optimization/results/data_shapley_mean_1471_20240304_012431.csv",
-                     23512: "experiments/context_optimization/results/data_shapley_mean_23512_20240304_120843.csv",
-                     41147: "experiments/context_optimization/results/data_shapley_mean_41147_20240305_003107.csv"}
+result_files_detailed = {1471: ["experiments/context_optimization/results/data_shapley_1471_20240304_012431.csv",
+                                "experiments/context_optimization/results/data_shapley_1471_20240306_060133.csv"],
+                         23512: ["experiments/context_optimization/results/data_shapley_23512_20240304_120843.csv",
+                                 "experiments/context_optimization/results/data_shapley_23512_20240306_171800.csv"],
+                         41147: ["experiments/context_optimization/results/data_shapley_41147_20240305_003107.csv",
+                                "experiments/context_optimization/results/data_shapley_41147_20240307_055533.csv"]}
+
+result_files_mean = {1471: ["experiments/context_optimization/results/data_shapley_mean_1471_20240304_012431.csv",
+                            "experiments/context_optimization/results/data_shapley_mean_1471_20240306_060133.csv"],
+                     23512: ["experiments/context_optimization/results/data_shapley_mean_23512_20240304_120843.csv",
+                             "experiments/context_optimization/results/data_shapley_mean_23512_20240306_171800.csv"],
+                     41147: ["experiments/context_optimization/results/data_shapley_mean_41147_20240305_003107.csv",
+                             "experiments/context_optimization/results/data_shapley_mean_41147_20240307_055533.csv"]}
 
 detailed_results = {}
 mean_results = {}
 
 for openml_id in openml_ids:
-    detailed_results[openml_id] = pd.read_csv(result_files_detailed[openml_id])
-    mean_results[openml_id] = pd.read_csv(result_files_mean[openml_id])
+    detailed_results[openml_id]= pd.DataFrame()
+
+    for file_path in result_files_detailed[openml_id]:
+        detailed_results[openml_id]= pd.concat([detailed_results[openml_id], pd.read_csv(file_path)], axis= 0)
+
+
+    mean_results[openml_id]= pd.DataFrame()
+
+    for file_path in result_files_mean[openml_id]:
+        mean_results[openml_id]= pd.concat([mean_results[openml_id], pd.read_csv(file_path)], axis= 0)    
 
 #     temp_df= mean_results[openml_id]
 #     temp_df["Gain"]= temp_df["OC Acc"] - temp_df["RC Mean Acc"]
@@ -43,7 +58,7 @@ for openml_id in openml_ids:
 # plt.show()
 
 for openml_id in openml_ids:
-    temp_mean_results = mean_results[openml_id]
+    temp_mean_results = mean_results[openml_id].groupby("M").agg("mean").reset_index()
     temp_mean_results = temp_mean_results[temp_mean_results["M"] == M][[
         "RC Mean Acc", "OC Acc"]]
     temp_mean_results["seed"] = "Mean"
@@ -53,10 +68,11 @@ for openml_id in openml_ids:
     temp_detailed_results = temp_detailed_results[[
         "seed", "RC Mean Acc", "OC Acc"]]
 
-    temp_results = pd.concat(
-        [temp_detailed_results, temp_mean_results], axis=0)
+    # temp_results = pd.concat(
+    #     [temp_detailed_results, temp_mean_results], axis=0)
+    temp_results= temp_detailed_results
 
-    temp_results["seed"] = list(range(1, 6)) + ["Mean"]
+    temp_results["seed"] = list(range(1, 11)) #+ ["Mean"]
     temp_results = temp_results.set_index("seed")
 
     temp_min = temp_detailed_results[["RC Mean Acc", "OC Acc"]].min().min()
@@ -71,14 +87,20 @@ for openml_id in openml_ids:
     temp_results.plot(kind="bar",
                       ax=axs[i],
                       ylim=(temp_plot_min, temp_plot_max),
-                      title=f'{str(openml.datasets.get_dataset(openml_id).name)} dataset',
-                      legend=True,
-                      xlabel="Run",
-                      ylabel="Accuracy",
+                      legend= (True if i==0 else False),
                       color=[cmap_inverted.colors[230],
                              cmap_inverted.colors[100]],
-                      rot=0)
-    axs[i].set_xlabel("Run")
+                      rot=0,
+                      alpha= 0.9,
+                      fontsize= 14)
+    
+    axs[i].set_title(f'{str(openml.datasets.get_dataset(openml_id).name)} (ID: {str(openml_id)})', fontsize= 14)
+    axs[i].set_xlabel("Run", fontsize= 14)
+    axs[i].set_ylabel("Accuracy", fontsize= 14)
+
+    axs[i].axhline(y=temp_mean_results["RC Mean Acc"].item(), color=cmap_inverted.colors[230], linestyle='-', label='Horizontal Line')
+    axs[i].axhline(y=temp_mean_results["OC Acc"].item(), color=cmap_inverted.colors[100], linestyle='-', label='Horizontal Line')
+
     i += 1
 
 plt.tight_layout()

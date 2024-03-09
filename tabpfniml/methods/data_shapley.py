@@ -6,7 +6,7 @@ from scipy.special import comb
 import statsmodels.api as sm
 from tabpfniml.methods.interpret import TabPFN_Interpret
 from tabpfniml.datasets.datasets import OpenMLData
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, roc_auc_score
 from typing import Optional, Union, List, Dict
 import os
 import pickle
@@ -97,7 +97,8 @@ class Data_Shapley(TabPFN_Interpret):
             M_factor: int = 1,
             tPFN_train_min: int = 128,
             tPFN_train_max: int = 1024,
-            class_to_be_explained: int = 1
+            class_to_be_explained: int = 1,
+            return_intermediate_results = False,
             ):
         """
         Fits a local surrogate model (weighted linear model) to predict the empirical loss for validation samples given observation coalitions.
@@ -108,6 +109,7 @@ class Data_Shapley(TabPFN_Interpret):
             M_factor (int, optional): An integer value to specify how many observation coalitions shall be considered, where the amount of coalitions is n_train * M_factor. Must at least be 1 to avoid n<p. Defaults to 1.
             tPFN_train_min: Minimal training set size for TabPFN forward passes to get meaningful predicitons. Serves as the lower bound for the size of the observation coalitions. Defaults to 128.
             tPFN_train_max: Maximum training set size for TabPFN forward passes. Serves as the upper bound for the size of the observation coalitions. Defaults to 1024, as proposed by the authors.
+            return_intermediate_results (bool, optional): Whether intermediate results (design matrix, loss values, weights) for the regression shall be returned. Defaults to False.
             class_to_be_explained (int, optional): The class that predictions are explained for. Ignored it pred_based=False. Defaults to 1.
 
         Raises:
@@ -221,6 +223,9 @@ class Data_Shapley(TabPFN_Interpret):
                 else:
                     pass
 
+            if return_intermediate_results:
+                return design_matrix, weights, loss_values
+
         else:
             raise ValueError("Not implemented yet.")
 
@@ -303,15 +308,19 @@ class Data_Shapley(TabPFN_Interpret):
         try:
             random_losses = []
             random_accs = []
+            random_roc_auc = []
 
             results_dict = {"seed": [],
                             "M": [],
                             "RC Mean Loss": [],
                             "RC Mean Acc": [],
+                            "RC Mean ROC AUC": [],
                             "RC Std Loss": [],
                             "RC Std Acc": [],
+                            "RC Std ROC AUC": [],
                             "OC Loss": [],
-                            "OC Acc": []}
+                            "OC Acc": [],
+                            "OC ROC AUC": []}
 
             # Obtain Loss and Accuracy for multiple random contexts
             amount_random_train_sets = math.floor(
@@ -332,9 +341,12 @@ class Data_Shapley(TabPFN_Interpret):
                     np.asarray(np.argmax(temp_preds, axis=-1), dtype=np.intp))
                 temp_acc = accuracy_score(torch.tensor(
                     self.y_test.copy(), dtype=torch.long), temp_preds_hard)
+                temp_roc_auc = roc_auc_score(torch.tensor(
+                    self.y_test.copy(), dtype=torch.long), temp_preds[:, self.class_to_be_explained])
 
                 random_losses.append(temp_loss.item())
                 random_accs.append(temp_acc)
+                random_roc_auc.append(temp_roc_auc)
 
             # Obtain Loss and Accuracy for optimized contexts
             for m in self.m_range:
@@ -355,15 +367,20 @@ class Data_Shapley(TabPFN_Interpret):
                         np.asarray(np.argmax(preds_opt, axis=-1), dtype=np.intp))
                     acc_opt = accuracy_score(torch.tensor(
                         self.y_test.copy(), dtype=torch.long), preds_opt_hard)
+                    roc_auc_opt = roc_auc_score(torch.tensor(
+                        self.y_test.copy(), dtype=torch.long), preds_opt[:, self.class_to_be_explained])
 
                     results_dict["seed"].append(self.seed)
                     results_dict["M"].append(m)
                     results_dict["RC Mean Loss"].append(np.mean(random_losses))
                     results_dict["RC Mean Acc"].append(np.mean(random_accs))
+                    results_dict["RC Mean ROC AUC"].append(np.mean(random_roc_auc))
                     results_dict["RC Std Loss"].append(np.std(random_losses))
                     results_dict["RC Std Acc"].append(np.std(random_accs))
+                    results_dict["RC Std ROC AUC"].append(np.std(random_roc_auc))
                     results_dict["OC Loss"].append(loss_opt.item())
                     results_dict["OC Acc"].append(acc_opt)
+                    results_dict["OC ROC AUC"].append(roc_auc_opt)
                     # "RC Detailed_Loss": random_losses,
                     # "RC Detailed_Acc": random_accs,
 
