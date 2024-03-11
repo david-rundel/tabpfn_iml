@@ -13,6 +13,8 @@ To account for the peculiarities of TabPFN, many methods are implemented from sc
 
 Moreover, within [tabpfniml/tabpfn_interpret](tabpfniml/tabpfn_interpret), it contains a modified copy of the [TabPFN](https://github.com/automl/TabPFN) code.
 
+**A demo-notebook, containing examples of all methods available in this package is located at** `demo/tabpfniml_demo_notebook.ipynb`.
+
 This package provides the following methods:
 
 ### Feature Effect Methods
