@@ -13,22 +13,28 @@ def plot_barplot(df, x, y, hue, hue_order, title, palette):
     sns.set_theme(style="ticks", font='sans-serif', font_scale=1.5)
     sorted_df = df.sort_values(by=y, ascending=True)
     sns.barplot(data=sorted_df,
-                    x=x, y=y, hue=hue, hue_order=hue_order, palette=palette)
+                    x=x, y=y, hue=hue, hue_order=hue_order, palette=palette, saturation=1.0)
     plt.xticks(rotation=45)
     plt.title(title)
     plt.tight_layout()
     return plt
 
+def get_latest_csv_file(directory:str,
+                        prefix:str,
+                        criterion:str=None):
+    files = os.listdir(directory)
+    if criterion is not None:
+        filtered_files = [file for file in files if file.startswith(prefix) and criterion not in file]
+    else:
+        filtered_files = [file for file in files if file.startswith(prefix)]
+    sorted_files = sorted(filtered_files, reverse=True)
+    latest_file = sorted_files[0]
+    return pd.read_csv(f'{directory}/{latest_file}')
 
-# Get the latest pdp benchmark results file
-files = os.listdir('experiments/ice_pd/results')
-filtered_files = [file for file in files if file.startswith('benchmark_results_pdp_')]
-sorted_files = sorted(filtered_files, reverse=True)
-latest_file = sorted_files[0]
-df_pdp = pd.read_csv(f'experiments/ice_pd/results/{latest_file}')
+df_pdp = get_latest_csv_file('experiments/ice_pd/results', 'benchmark_results_pdp_', 'openml')
 
 barplot_pdp = plot_barplot(df=df_pdp,
-                       x="Number of unique Featurevalues",
+                       x="Number of unique Feature Values",
                        y="Runtime in Seconds",
                        hue="Implementation",
                        hue_order=["tabpfn_iml PDP", "scikit-learn PDP"],
@@ -39,16 +45,10 @@ barplot_pdp = plot_barplot(df=df_pdp,
 barplot_pdp.savefig('experiments/ice_pd/pdp_runtime_comparison_synth.pdf')
 
 
-# Get the latest ale benchmark results file
-files = os.listdir('experiments/ice_pd/results')
-filtered_files = [file for file in files if file.startswith('benchmark_results_ale_')]
-sorted_files = sorted(filtered_files, reverse=True)
-latest_file = sorted_files[0]
-df_pdp = pd.read_csv(f'experiments/ice_pd/results/{latest_file}')
+df_ale = get_latest_csv_file('experiments/ice_pd/results', 'benchmark_results_ale_', 'openml')
 
-
-barplot_ale = plot_barplot(df=df_pdp,
-                       x="Number of unique Featurevalues",
+barplot_ale = plot_barplot(df=df_ale,
+                       x="Number of unique Feature Values",
                        y="Runtime in Seconds",
                        hue="Implementation",
                        hue_order=["tabpfn_iml ALE", "PyALE ALE"],
@@ -58,15 +58,10 @@ barplot_ale = plot_barplot(df=df_pdp,
 barplot_ale.savefig('experiments/ice_pd/ale_runtime_comparison_synth.pdf')
 
 
-# Get the latest pdp openml benchmark results file
-files = os.listdir('experiments/ice_pd/results')
-filtered_files = [file for file in files if file.startswith('benchmark_results_pdp_openml_')]
-sorted_files = sorted(filtered_files, reverse=True)
-latest_file = sorted_files[0]
-df_pdp_openml = pd.read_csv(f'experiments/ice_pd/results/{latest_file}')
+df_pdp_openml = get_latest_csv_file('experiments/ice_pd/results', 'benchmark_results_pdp_openml_')
 
 barplot_pdp_openml = plot_barplot(df=df_pdp_openml,
-                          x="Number of unique Featurevalues",
+                          x="Number of unique Feature Values",
                           y="Runtime in Seconds",
                           hue="Implementation",
                           hue_order=["tabpfn_iml PDP", "scikit-learn PDP"],
@@ -76,15 +71,10 @@ barplot_pdp_openml = plot_barplot(df=df_pdp_openml,
 barplot_pdp_openml.savefig('experiments/ice_pd/pdp_runtime_comparison_openml.pdf')
 
 
-# Get the latest ale openml benchmark results file
-files = os.listdir('experiments/ice_pd/results')
-filtered_files = [file for file in files if file.startswith('benchmark_results_ale_openml_')]
-sorted_files = sorted(filtered_files, reverse=True)
-latest_file = sorted_files[0]
-df_ale_openml = pd.read_csv(f'experiments/ice_pd/results/{latest_file}')
+df_ale_openml = get_latest_csv_file('experiments/ice_pd/results', 'benchmark_results_ale_openml_')
 
 barplot_ale_openml = plot_barplot(df=df_ale_openml,
-                            x="Number of unique Featurevalues",
+                            x="Number of unique Feature Values",
                             y="Runtime in Seconds",
                             hue="Implementation",
                             hue_order=["tabpfn_iml ALE", "PyALE ALE"],

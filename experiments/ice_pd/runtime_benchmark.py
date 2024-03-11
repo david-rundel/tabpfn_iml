@@ -1,5 +1,10 @@
+import os
 import sys
 
+current_script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_script_dir)
+module_dir = os.path.dirname(parent_dir)
+sys.path.append(module_dir)
 
 import time
 import numpy as np
@@ -213,14 +218,14 @@ melted_df_pdp, melted_df_ale = run_benchmark(openml=False,
                                              level_list=[5, 10, 25, 50, 100, 200, 300],
                                              feature_id_of_interest=1)
 current_time = datetime.datetime.now().strftime("%Y_%m_%d_%H%M")
-melted_df_pdp.to_csv(f"results/benchmark_results_pdp_{current_time}.csv")
-melted_df_ale.to_csv(f"results/benchmark_results_ale_{current_time}.csv")
+melted_df_pdp.to_csv(f"experiments/ice_pd/results/benchmark_results_pdp_{current_time}.csv")
+melted_df_ale.to_csv(f"experiments/ice_pd/results/benchmark_results_ale_{current_time}.csv")
 print("Benchmarking synthetic datasets done.")
 
 melted_df_pdp, melted_df_ale = run_benchmark(openml=True,
                                              open_cc_dids=[11, 15, 31, 1049, 37, 40982, 1494],
                                              feature_id_of_interest=1)
 current_time = datetime.datetime.now().strftime("%Y_%m_%d_%H%M")
-melted_df_pdp.to_csv(f"results/benchmark_results_pdp_openml_{current_time}.csv")
-melted_df_ale.to_csv(f"results/benchmark_results_ale_openml_{current_time}.csv")
+melted_df_pdp.to_csv(f"experiments/ice_pd/results/benchmark_results_pdp_openml_{current_time}.csv")
+melted_df_ale.to_csv(f"experiments/ice_pd/results/benchmark_results_ale_openml_{current_time}.csv")
 print("Benchmarking openml datasets done.")
