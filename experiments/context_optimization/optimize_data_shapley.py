@@ -1,13 +1,10 @@
-import sys
-sys.path.append('/Users/davidrundel/git/tabpfn_iml/')
-
-import pickle
-import torch
-import random
-import datetime
-import pandas as pd
-import numpy as np
 from tabpfniml.methods.data_shapley import Data_Shapley
+import numpy as np
+import pandas as pd
+import datetime
+import random
+import torch
+import pickle
 
 if torch.backends.mps.is_available():
     DEVICE = 'mps'
@@ -40,14 +37,16 @@ else:
     tPFN_train_max = 512
     runs = 5
 
-seed_shift= 0 #Default 0. Can be used to proceed an experiment where there have already been seed_shift-many runs with different seeds.
+# Default 0. Can be used to proceed an experiment where there have already been seed_shift-many runs with different seeds.
+seed_shift = 0
 
 
-openml_ids = [1471, 23512, 41147] 
+openml_ids = [1471, 23512, 41147]
 for openml_id in openml_ids:
     # Ensure reproducibility of conducted experiments across several runs
     random.seed(42)
-    seeds = [random.randint(1, 10000) for _ in range(seed_shift + runs)][seed_shift:seed_shift+runs]
+    seeds = [random.randint(1, 10000) for _ in range(
+        seed_shift + runs)][seed_shift:seed_shift+runs]
     formatted_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
     experiment_results = pd.DataFrame()
@@ -61,18 +60,18 @@ for openml_id in openml_ids:
                                     seed=seed
                                     )
 
-        design_matrix, weights, loss_values= data_shapley.fit(M_factor=M_factor,
-                                                                tPFN_train_min=tPFN_train_min,
-                                                                tPFN_train_max=tPFN_train_max,
-                                                                class_to_be_explained=1,
-                                                                return_intermediate_results= True)
-        
+        design_matrix, weights, loss_values = data_shapley.fit(M_factor=M_factor,
+                                                               tPFN_train_min=tPFN_train_min,
+                                                               tPFN_train_max=tPFN_train_max,
+                                                               class_to_be_explained=1,
+                                                               return_intermediate_results=True)
+
         design_matrix.to_csv('experiments/context_optimization/results/intermediate_results/design_matrix_' +
-                                str(openml_id) + '_' + str(seed) + '_' + formatted_datetime + '.csv', index=True)
+                             str(openml_id) + '_' + str(seed) + '_' + formatted_datetime + '.csv', index=True)
         weights.to_csv('experiments/context_optimization/results/intermediate_results/weights_' +
-                                str(openml_id) + '_' + str(seed) + '_' + formatted_datetime + '.csv', index=True)
+                       str(openml_id) + '_' + str(seed) + '_' + formatted_datetime + '.csv', index=True)
         loss_values.to_csv('experiments/context_optimization/results/intermediate_results/loss_values_' +
-                                str(openml_id) + '_' + str(seed) + '_' + formatted_datetime + '.csv', index=True)
+                           str(openml_id) + '_' + str(seed) + '_' + formatted_datetime + '.csv', index=True)
 
         data_values = data_shapley.get_data_values()
         opt_context = data_shapley.get_optimized_context()
@@ -86,10 +85,11 @@ for openml_id in openml_ids:
 
     experiment_results.to_csv('experiments/context_optimization/results/data_shapley_' +
                               str(openml_id) + '_' + formatted_datetime + '.csv', index=True)
-    
-    experiment_results_mean= experiment_results.drop(columns=["seed"]).groupby(["M"]).mean()
+
+    experiment_results_mean = experiment_results.drop(
+        columns=["seed"]).groupby(["M"]).mean()
     experiment_results_mean.to_csv('experiments/context_optimization/results/data_shapley_mean_' +
-                              str(openml_id) + '_' + formatted_datetime + '.csv', index=True)
+                                   str(openml_id) + '_' + formatted_datetime + '.csv', index=True)
 
     hp_dict = {"n_train": n_train,
                "n_val": n_val,
@@ -102,15 +102,13 @@ for openml_id in openml_ids:
     with open('experiments/context_optimization/results/data_shapley_hps_' + str(openml_id) + '_' + formatted_datetime + '.pkl', 'wb') as file:
         pickle.dump(hp_dict, file)
 
-
     np.save('experiments/context_optimization/results/intermediate_results/X_test' +
-                            str(openml_id) + '_' + formatted_datetime + '.csv',
-                            data_shapley.X_test)
-    
-    np.save('experiments/context_optimization/results/intermediate_results/y_test' +
-                            str(openml_id) + '_' + formatted_datetime + '.csv',
-                            data_shapley.y_test)
+            str(openml_id) + '_' + formatted_datetime + '.csv',
+            data_shapley.X_test)
 
+    np.save('experiments/context_optimization/results/intermediate_results/y_test' +
+            str(openml_id) + '_' + formatted_datetime + '.csv',
+            data_shapley.y_test)
 
     print(experiment_results)
 

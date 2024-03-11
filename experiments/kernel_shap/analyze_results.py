@@ -66,7 +66,7 @@ def plot_error_per_ML(exp_results, save):
         plt.show()
 
 
-plot_error_per_ML(exp_results, save= False)
+plot_error_per_ML(exp_results, save=False)
 
 
 stacked_results = {}
@@ -148,7 +148,7 @@ def plot_error_per_tc(stacked_results, save):
                         elinewidth=1,
                         marker='_',
                         color=cmap_inverted.colors[230],
-                        alpha=0.1) #0.05
+                        alpha=0.1)  # 0.05
 
         axs[i].scatter(temp_stacked_results_appr['Token_Connections'],
                        temp_stacked_results_appr['Error_Mean'],
@@ -157,9 +157,9 @@ def plot_error_per_tc(stacked_results, save):
                        label="Appr. retraining")
 
         axs[i].set_title(
-            f'{str(openml.datasets.get_dataset(openml_id).name)} (ID: {str(openml_id)})', fontsize= 14)
-        axs[i].set_xlabel('Token Connections', fontsize= 14)
-        axs[i].set_ylabel('Error', fontsize= 14)
+            f'{str(openml.datasets.get_dataset(openml_id).name)} (ID: {str(openml_id)})', fontsize=14)
+        axs[i].set_xlabel('Token Connections', fontsize=14)
+        axs[i].set_ylabel('Error', fontsize=14)
         axs[i].set_ylim(0, (temp_stacked_results['Error_Mean'] +
                         temp_stacked_results['Error_Std']).quantile(quantiles[i]))
 
@@ -168,7 +168,7 @@ def plot_error_per_tc(stacked_results, save):
         i += 1
 
     plt.tight_layout()
-    plt.legend(markerscale= 5)
+    plt.legend(markerscale=5)
 
     if save:
         plt.savefig('experiments/kernel_shap/results/Error_TC.pdf',
@@ -177,4 +177,4 @@ def plot_error_per_tc(stacked_results, save):
         plt.show()
 
 
-plot_error_per_tc(stacked_results, save= True)
+plot_error_per_tc(stacked_results, save=True)

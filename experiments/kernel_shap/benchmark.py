@@ -1,18 +1,12 @@
-# TO DELETE
-import sys
-# sys.path.append(
-#     '/Users/juli/Documents/SoSe_23/Consulting/publication/tabpfn_iml')
-sys.path.append('/Users/davidrundel/git/tabpfn_iml/')
-
-from experiments.kernel_shap.kernel_shap import Kernel_SHAP
-from experiments.kernel_shap.exact_shapley import Shapley_Exact
-from tabpfniml.datasets.datasets import OpenMLData
-import torch
-import random
-import pickle
-import datetime
-import pandas as pd
 import numpy as np
+import pandas as pd
+import datetime
+import pickle
+import random
+import torch
+from tabpfniml.datasets.datasets import OpenMLData
+from experiments.kernel_shap.exact_shapley import Shapley_Exact
+from experiments.kernel_shap.kernel_shap import Kernel_SHAP
 
 """
 Python script to conduct the numerical experiments outlined in section '4.2 Kernel SHAP' of the paper.

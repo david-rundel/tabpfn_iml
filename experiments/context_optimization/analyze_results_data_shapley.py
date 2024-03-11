@@ -32,19 +32,21 @@ detailed_results = {}
 mean_results = {}
 
 for openml_id in openml_ids:
-    detailed_results[openml_id]= pd.DataFrame()
+    detailed_results[openml_id] = pd.DataFrame()
 
     for file_path in result_files_detailed[openml_id]:
-        detailed_results[openml_id]= pd.concat([detailed_results[openml_id], pd.read_csv(file_path)], axis= 0)
+        detailed_results[openml_id] = pd.concat(
+            [detailed_results[openml_id], pd.read_csv(file_path)], axis=0)
 
-
-    mean_results[openml_id]= pd.DataFrame()
+    mean_results[openml_id] = pd.DataFrame()
 
     for file_path in result_files_mean[openml_id]:
-        mean_results[openml_id]= pd.concat([mean_results[openml_id], pd.read_csv(file_path)], axis= 0)    
+        mean_results[openml_id] = pd.concat(
+            [mean_results[openml_id], pd.read_csv(file_path)], axis=0)
 
 for openml_id in openml_ids:
-    temp_mean_results = mean_results[openml_id].groupby("M").agg("mean").reset_index()
+    temp_mean_results = mean_results[openml_id].groupby(
+        "M").agg("mean").reset_index()
     temp_mean_results = temp_mean_results[temp_mean_results["M"] == M][[
         "RC Mean ROC AUC", "OC ROC AUC"]]
     temp_mean_results["seed"] = "Mean"
@@ -54,39 +56,43 @@ for openml_id in openml_ids:
     temp_detailed_results = temp_detailed_results[[
         "seed", "RC Mean ROC AUC", "OC ROC AUC"]]
 
-    temp_results= temp_detailed_results
+    temp_results = temp_detailed_results
 
-    temp_results["seed"] = list(range(1, 6)) #+ ["Mean"]
+    temp_results["seed"] = list(range(1, 6))  # + ["Mean"]
     temp_results = temp_results.set_index("seed")
 
-    temp_min = temp_detailed_results[["RC Mean ROC AUC", "OC ROC AUC"]].min().min()
-    temp_max = temp_detailed_results[["RC Mean ROC AUC", "OC ROC AUC"]].max().max()
+    temp_min = temp_detailed_results[[
+        "RC Mean ROC AUC", "OC ROC AUC"]].min().min()
+    temp_max = temp_detailed_results[[
+        "RC Mean ROC AUC", "OC ROC AUC"]].max().max()
     temp_mid = (temp_min+temp_max)/2
     temp_plot_max = temp_mid + 3*(temp_max - temp_mid)
     temp_plot_min = temp_mid - 3*(temp_max - temp_mid)
 
     temp_results = temp_results.rename(columns={"RC Mean ROC AUC": "Random Context",
                                                 "OC ROC AUC": "Optimized Context"})
-    
+
     # axs[i].axhline(y=temp_mean_results["RC Mean ROC AUC"].item(), color=cmap_inverted.colors[230], linestyle='-', label='Horizontal Line')
     # axs[i].axhline(y=temp_mean_results["OC ROC AUC"].item(), color=cmap_inverted.colors[100], linestyle='-', label='Horizontal Line')
 
     temp_results.plot(kind="bar",
                       ax=axs[i],
                       ylim=(temp_plot_min, temp_plot_max),
-                      legend= (True if i==2 else False),
+                      legend=(True if i == 2 else False),
                       color=[cmap_inverted.colors[230],
                              cmap_inverted.colors[100]],
                       rot=0,
-                      alpha= 0.9,
-                      fontsize= 14)
-    
-    axs[i].set_title(f'{str(openml.datasets.get_dataset(openml_id).name)} (ID: {str(openml_id)})', fontsize= 14)
-    axs[i].set_xlabel("Run", fontsize= 14)
-    axs[i].set_ylabel("ROC AUC", fontsize= 14)
+                      alpha=0.9,
+                      fontsize=14)
+
+    axs[i].set_title(
+        f'{str(openml.datasets.get_dataset(openml_id).name)} (ID: {str(openml_id)})', fontsize=14)
+    axs[i].set_xlabel("Run", fontsize=14)
+    axs[i].set_ylabel("ROC AUC", fontsize=14)
 
     print("Difference ID: " + str(openml_id) + ":")
-    print((temp_results["Optimized Context"]-temp_results["Random Context"]).mean())
+    print((temp_results["Optimized Context"] -
+          temp_results["Random Context"]).mean())
     print("---")
 
     i += 1

@@ -156,9 +156,10 @@ class Kernel_SHAP(TabPFN_Interpret):
                 self.random_train_indices = []
                 for j in range(max_L):
                     X_test_imputed = self.X_test.copy()
-                    random_train_index = random.randint(0, self.X_train.shape[0]-1)
+                    random_train_index = random.randint(
+                        0, self.X_train.shape[0]-1)
                     X_test_imputed[:, ~coalition_mask_bool] = self.X_train[random_train_index,
-                                                                        ~coalition_mask_bool].copy()  # Broadcast
+                                                                           ~coalition_mask_bool].copy()  # Broadcast
                     temp_preds = self.classifier.predict_proba(
                         X_test_imputed)[:, self.class_to_be_explained]  # , return_logits= True
 
@@ -179,9 +180,9 @@ class Kernel_SHAP(TabPFN_Interpret):
                     #     pd.Series(temp_mean), ignore_index=True)
 
                     pred_values_approximate_marg[j+1] = pd.concat([pred_values_approximate_marg[j+1],
-                                                                pd.Series(temp_mean).to_frame().T],
-                                                                ignore_index=True,
-                                                                axis=0)
+                                                                   pd.Series(temp_mean).to_frame().T],
+                                                                  ignore_index=True,
+                                                                  axis=0)
 
         def get_SHAP_values(temp_preds, K):
             # Step 4: Fit a weighted linear model
