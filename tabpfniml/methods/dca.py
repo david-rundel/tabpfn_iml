@@ -7,7 +7,10 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import make_column_transformer
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from lightgbm import LGBMClassifier
+try:
+    from lightgbm import LGBMClassifier
+except ImportError:
+    print("LightGBM is not installed. If you wish to compare TabPFN's DC to LightGBM's DC, please install it.")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tabpfniml.methods.interpret import TabPFN_Interpret
