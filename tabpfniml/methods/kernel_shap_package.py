@@ -24,11 +24,11 @@ class SHAP_Package_Wrapper(TabPFN_Interpret):
     in combination with TabPFN. 
 
     In detail, SHAP approximates marginalizing the prediction function over non-coalition features of a test-sample by substituting them with values of the median sample.
-    However, the TabPFN model can be refit with negible computational overhead leading to an exact solution of model predictions with only the coalition features.
+    However, the TabPFN model can be refit with negible computational overhead leading to an exact retraining with only the coalition features.
     For this approach, TabPFN can only evaluate one feature coalition at once (because every feature coalition requires refitting the model on the training data) 
     but with several test-samples at the same time. In this implementation of SHAP however, it is first iterated over test samples (shap_values() => explain()) 
     and afterwards over all feature coalitions (run()). 
-    In order to obtain exact solutions, the forward pass of TabPFN has to be called for each test-sample and coalition seperately. 
+    In order to obtain exact retraining, the forward pass of TabPFN has to be called for each test-sample and coalition seperately. 
     This requires (n_test * K) forward passes with 1 test sample in each forward pass. This approach (sequenial inference) is generally less efficient than
     batch inference, since it does not leverage parallel processing capabilities (especially on GPUs).
     Alternatively, using the median values for non-coalition features yields a faster (n_test forward passes with K test samples in each forward pass, where the model is 
@@ -46,7 +46,7 @@ class SHAP_Package_Wrapper(TabPFN_Interpret):
         def run(self):
             """
             run()-method of shap.KernelExplainer overwritten in order to modify forward-pass to take information describing the coalitions as arguments.
-            This way test-samples only with coalitions-features and without median values for non-coalition features can be restored to obtain exact marginalizing over non-coalition features.
+            This way test-samples only with coalitions-features and without median values for non-coalition features can be restored to obtain exact retraining over non-coalition features.
             This method is called in the explain()-method (which is called in the shap_values()-method for every test-sample) )in shap/explainers/_kernel.py of the Kernel class.
             """
             num_to_run = self.nsamplesAdded * self.N - self.nsamplesRun * self.N
@@ -124,7 +124,7 @@ class SHAP_Package_Wrapper(TabPFN_Interpret):
         """
         Wrapper around the TabPFN-classifier used in KernelExplainerForTabPFN (that inherits from shap.KernelExplainer).
         Besides the test data, it takes information as arguments that can be used to restore test-sample with coalition-features only and without median values for non-coalition features.
-        This is used to obtain exact marginalizing over non-coalition features.
+        This is used to obtain exact retraining over non-coalition features.
         This method is called by the run()-method of the KernelExplainerForTabPFN class.
 
         Args:

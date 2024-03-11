@@ -575,18 +575,3 @@ class LOCO(TabPFN_Interpret):
         except:
             raise Exception(
                 "Barplot is only possible if fit() has been applied in advance.")
-        
-# from datasets.datasets import GLADdata
-# loco= LOCO(data=GLADdata(id=5), 
-#            debug= True,
-#            n_train= 1024,
-#            n_test= 64,
-#            N_ensemble_configurations= 8)
-# loco.fit(compute_wrt_feature=True, 
-#          compute_wrt_observation=True, #
-#          loss_based= True, 
-#          pred_based= True)
-# loco.plot_bar(plot_wrt_observation= False, plot_pred_based= False)
-# loco.plot_bar(plot_wrt_observation= True, plot_pred_based= False)
-# loco.plot_bar(plot_wrt_observation= False, plot_pred_based= True)
-# loco.plot_bar(plot_wrt_observation= True, plot_pred_based= True)

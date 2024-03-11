@@ -14,9 +14,9 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class Kernel_SHAP(TabPFN_Interpret):
     """
-    Implementation of approximate and exact retraining/ feature marginalization for Kernel SHAP used in experiments/kernel_shap/benchmark.py.
+    Implementation of approximate and exact retraining for Kernel SHAP used in experiments/kernel_shap/benchmark.py.
     It is a modified version of 'tabpfniml/methods/kernel_shap.py', but more efficient when computing 
-    exact and approximate feature marginalization across multiple values of M and L simultaneously.
+    exact and approximate feature retraining across multiple values of M and L simultaneously.
     Also, it is limited to feature effect measures.
     """
 
@@ -59,7 +59,7 @@ class Kernel_SHAP(TabPFN_Interpret):
             max_L: int = 16
             ):
         """
-        Fits Kernel SHAP (as feature effect measure) with exact and approximate feature marginalizations for several values of M and L simultaneously.
+        Fits Kernel SHAP (as feature effect measure) with exact and approximate feature retraining for several values of M and L simultaneously.
 
         Args:
             class_to_be_explained (int, optional): The class that predictions are explained for. Defaults to 1.
@@ -130,7 +130,7 @@ class Kernel_SHAP(TabPFN_Interpret):
             # For TabPFN there is no need to impute the features that do not appear in the coalition by sampling from the marginal distribution.
             # Instead they can simply be left out and one can refit TabPFN yielding an exact solution.
 
-            # Obtain data for exact marginalization
+            # Obtain data for exact retraining
             X_train_masked = self.X_train[:, coalition_mask_bool].copy()
             X_test_masked = self.X_test[:, coalition_mask_bool].copy()
 
@@ -143,7 +143,7 @@ class Kernel_SHAP(TabPFN_Interpret):
                                                ignore_index=True,
                                                axis=0)
 
-            # Obtain data for approximate marginalization
+            # Obtain data for approximate retraining
             if m < self.M_max_approximate:
                 # In approximate case TabPFN only needs to be fit once, since training data and features remain constant.
                 # (Although the self-attention computation seems to be repeated every time.)
@@ -203,13 +203,13 @@ class Kernel_SHAP(TabPFN_Interpret):
                                     "SHAP_local_obs_" + str(i+1) for i in range(self.SHAP_local_intercept.shape[0])],
                                 columns=column_names)
 
-        # Compute Kernel SHAP for exact marginalization
+        # Compute Kernel SHAP for exact retraining
         self.SHAP_exact_marg = {}
         for m in range(self.M_min, self.M_max_exact+1):
             self.SHAP_exact_marg[m] = get_SHAP_values(
                 pred_values_exact_marg, K=m)
 
-        # Compute Kernel SHAP for approximate marginalization
+        # Compute Kernel SHAP for approximate retraining
         self.SHAP_approximate_marg = {}
         for m in range(self.M_min, self.M_max_approximate+1):
             for j in range(1, max_L+1):

@@ -10,13 +10,13 @@ from experiments.kernel_shap.kernel_shap import Kernel_SHAP
 
 """
 Python script to conduct the numerical experiments outlined in section '4.2 Kernel SHAP' of the paper.
-The focus is on comparing our proposed method, Exact Feature Marginalization for TabPFN, with the classical 
-approach introduced in the literature, namely, Approximate Feature Marginalization.
+The focus is on comparing our proposed method, Exact Retraining for TabPFN, with the classical 
+approach introduced in the literature, namely, Approximate Retraining.
 
 For the comparison, we design an error metric that measures the deviation from the exact Shapley values, 
 as implemented in experiments/kernel_shap/exact_shapley.py. We do not resort to 'tabpfniml/methods/kernel_shap.py', 
-but utilize 'experiments/kernel_shap/kernel_shap.py'. Thereby we modify it to compute exact and approximate feature 
-marginalization across multiple values of M and L, W simultaneously.
+but utilize 'experiments/kernel_shap/kernel_shap.py'. Thereby we modify it to compute exact and approximate retraining
+ across multiple values of M and L, W simultaneously.
 """
 
 if torch.backends.mps.is_available():
@@ -53,7 +53,7 @@ seeds = [random.randint(1, 10000) for _ in range(runs)]
 # Fetch data from OpenML
 data = OpenMLData(openml_id)
 
-# Track the results of exact and approximate marginalization across multiple runs
+# Track the results of exact and approximate retraining across multiple runs
 error_exact_marg_runs = {}
 error_appr_marg_runs = {}
 kernel_shap_exact_marg_values_runs = {}
@@ -74,8 +74,8 @@ shapley_exact.fit(debug=debug)
 
 for run in range(runs):
     print("Starting run " + str(run) + ".")
-    # Compute KernelSHAP with approximate and exact feature marginalization.
-    # Stochasticity in results due to sampling coalitions and approximate feature marginalization [LM fitting procedure does not introduce stochasticity due to seed].
+    # Compute KernelSHAP with approximate and exact retraining.
+    # Stochasticity in results due to sampling coalitions and approximate retraining [LM fitting procedure does not introduce stochasticity due to seed].
     kernel_shap = Kernel_SHAP(data=data,
                               n_train=n_train,
                               n_test=n_test,

@@ -7,11 +7,6 @@ from sklearn.utils.multiclass import check_classification_targets
 from sklearn.utils import column_or_1d
 import seaborn as sns
 import matplotlib.pyplot as plt
-
-#TO DELETE
-import sys
-sys.path.append('/Users/davidrundel/git/tabpfn_iml/')
-
 from tabpfniml.methods.interpret import TabPFN_Interpret
 from tabpfniml.datasets.datasets import dataset_iml
 from typing import Union, Optional, List
@@ -118,7 +113,7 @@ class Sensitivity(TabPFN_Interpret):
             class_to_be_explained: int = 1):
         """
         This method calculates the gradient of the model prediction (or alternatively loss) with 
-        respect to the input features (or alternatively training observation). By doing so, 
+        respect to features (or alternatively training observation). By doing so, 
         it determines the inputs that require minimal alteration while achieving the maximum 
         change in prediction (or alternatively loss). However, it only represents the sensitivity 
         of model outputs (or alternatively loss-values) to changes in the input while not 
