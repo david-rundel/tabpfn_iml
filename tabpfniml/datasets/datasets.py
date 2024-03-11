@@ -232,6 +232,14 @@ class OpenMLData(dataset_iml):
                 target=dataset.default_target_attribute,
                 dataset_format='dataframe')
             
+            #Encode string features as integers
+            for column_name in X.columns:
+                if X[column_name].dtype == 'object':
+                    X[column_name], _ = pd.factorize(X[column_name])
+
+            for col in X.select_dtypes(['category']).columns:
+                X[col] = X[col].cat.codes
+            
             X= X.to_numpy()
             y= y.to_numpy()
             
