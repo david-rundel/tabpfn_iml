@@ -30,6 +30,7 @@ dependencies=[
         'netcal>=1.3.5',
         'statsmodels>=0.13.5',
         'openml>=0.14.2',
+        'pytest>=6.2.2' 
 ]
 classifiers = [
     "Programming Language :: Python :: 3",

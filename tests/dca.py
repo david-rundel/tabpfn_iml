@@ -1,6 +1,13 @@
+import os
+import sys
+
+current_script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_script_dir)
+sys.path.append(parent_dir)
+
 import pytest
 import itertools
-from iml.methods.dca import DCA
+from tabpfniml.methods.dca import DCA
 import matplotlib
 from sklearn import linear_model
 from sklearn.neighbors import KNeighborsClassifier 

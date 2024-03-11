@@ -1,6 +1,13 @@
+import os
+import sys
+
+current_script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_script_dir)
+sys.path.append(parent_dir)
+
 import pytest
 import itertools
-from iml.methods.loco import LOCO
+from tabpfniml.methods.loco import LOCO
 import matplotlib
 
 # Test LOCO

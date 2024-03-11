@@ -1,6 +1,13 @@
+import os
+import sys
+
+current_script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_script_dir)
+sys.path.append(parent_dir)
+
 import pytest
 import itertools
-from iml.methods.kernel_shap_package import SHAP_Package_Wrapper
+from tabpfniml.methods.kernel_shap_package import SHAP_Package_Wrapper
 import matplotlib
 
 # Test Kernel SHAP Package Wrapper
