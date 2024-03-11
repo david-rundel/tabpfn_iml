@@ -154,7 +154,8 @@ class Sensitivity(TabPFN_Interpret):
             self.X_train, requires_grad=True, dtype=torch.float32)
         self.X_test = torch.tensor(
             self.X_test, requires_grad=True, dtype=torch.float32)
-        self.y_train = torch.tensor(self.y_train, dtype=torch.float32)
+        self.y_train = torch.tensor(
+            self.y_train, requires_grad=True, dtype=torch.float32)
         self.y_test = torch.tensor(
             self.y_test).type(torch.LongTensor)
 
@@ -168,13 +169,9 @@ class Sensitivity(TabPFN_Interpret):
             return hook
 
         self.X_train.register_hook(save_grad("X_train"))
-        self.X_test.register_hook(save_grad("X_test"))
+        self.y_train.register_hook(save_grad("y_train"))
 
-        #DELETE!
-        if self.y_train.mean()==4:
-            self.y_train[1]= self.y_train[1]-1
-        if self.y_train.mean()==0:
-            self.y_train[1]= self.y_train[1]+1
+        self.X_test.register_hook(save_grad("X_test"))
 
         self.classifier.fit(self.X_train, self.y_train)
         preds = self.classifier.predict_proba(self.X_test)
@@ -231,8 +228,14 @@ class Sensitivity(TabPFN_Interpret):
                     # Sensitivity as Observation Importance (OI_global)
                     X_train_grads = torch.nan_to_num(
                         temp_grads["X_train"].squeeze(), nan=0)
+                    y_train_grads = torch.nan_to_num(
+                        temp_grads["y_train"].squeeze(), nan=0)
+                    
                     # Always positive due to norm.
-                    sensitivity_x_train = torch.norm(X_train_grads, p=2, dim=1)
+                    sensitivity_x_train = torch.norm(torch.cat((X_train_grads, y_train_grads.unsqueeze(1)), dim=1), 
+                                                        p=2, 
+                                                        dim=1)
+
                     self.OI_global = pd.Series(sensitivity_x_train.numpy()).abs()
                     self.OI_global.index= ["Sens_OI_" + str(i) for i in range(self.n_train)]
 
@@ -254,7 +257,12 @@ class Sensitivity(TabPFN_Interpret):
                         # Sensitivity as Observation Effects (OE_local)
                         X_train_grads = torch.nan_to_num(
                             temp_grads["X_train"].squeeze(), nan=0)
-                        sensitivity_x_train = torch.norm(X_train_grads, p=2, dim=1)
+                        y_train_grads = torch.nan_to_num(
+                            temp_grads["y_train"].squeeze(), nan=0)
+
+                        sensitivity_x_train = torch.norm(torch.cat((X_train_grads, y_train_grads.unsqueeze(1)), dim=1), 
+                                                         p=2, 
+                                                         dim=1)
                         # Always positive due to norm.
                         temp_OE = pd.Series(sensitivity_x_train.numpy()).abs()
                         self.OE_local = pd.concat([self.OE_local, pd.DataFrame([temp_OE])],
@@ -278,8 +286,13 @@ class Sensitivity(TabPFN_Interpret):
                         # Sensitivity as Observation Importance (OI_local)
                         X_train_grads = torch.nan_to_num(
                             temp_grads["X_train"].squeeze(), nan=0)
+                        y_train_grads = torch.nan_to_num(
+                            temp_grads["y_train"].squeeze(), nan=0)
+
                         # Always positive due to norm.
-                        sensitivity_x_train = torch.norm(X_train_grads, p=2, dim=1)
+                        sensitivity_x_train = torch.norm(torch.cat((X_train_grads, y_train_grads.unsqueeze(1)), dim=1), 
+                                                         p=2, 
+                                                         dim=1)
                         temp_OI = pd.Series(sensitivity_x_train.numpy()).abs()
                         self.OI_local = pd.concat([self.OI_local, pd.DataFrame([temp_OI])],
                                                 ignore_index=True)

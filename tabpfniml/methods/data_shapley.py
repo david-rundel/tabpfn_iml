@@ -53,7 +53,7 @@ class Data_Shapley(TabPFN_Interpret):
 
         Raises:
             Exception: If the specified training set size is smaller than 1024 and optimize_context= True. In this case, context optimization is not necessary.
-            Exception: If the specified OpenML has to few entries for the specified dataset sizes.
+            Exception: If the specified OpenML dataset has to few entries for the specified dataset sizes.
         """
         self.n_train = n_train
         self.optimize_context = optimize_context
@@ -75,7 +75,7 @@ class Data_Shapley(TabPFN_Interpret):
 
         if data_init.num_samples < (self.n_train + n_test_full):
             raise ValueError(
-                "The specified OpenML has to few entries for the specified dataset sizes.")
+                "The specified OpenML dataset has to few entries for the specified dataset sizes.")
 
         super().__init__(data=data_init,
                          n_train=self.n_train,

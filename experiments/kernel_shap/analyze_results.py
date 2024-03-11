@@ -158,7 +158,7 @@ def plot_error_per_tc(stacked_results, save):
 
         axs[i].set_title(
             f'{str(openml.datasets.get_dataset(openml_id).name)} (ID: {str(openml_id)})', fontsize= 14)
-        axs[i].set_xlabel('Token connections', fontsize= 14)
+        axs[i].set_xlabel('Token Connections', fontsize= 14)
         axs[i].set_ylabel('Error', fontsize= 14)
         axs[i].set_ylim(0, (temp_stacked_results['Error_Mean'] +
                         temp_stacked_results['Error_Std']).quantile(quantiles[i]))

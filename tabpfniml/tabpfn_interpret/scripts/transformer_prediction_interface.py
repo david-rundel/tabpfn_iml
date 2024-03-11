@@ -189,8 +189,15 @@ class TabPFNClassifier(BaseEstimator, ClassifierMixin):
 
         if X.shape[1] > self.max_num_features:
             raise ValueError("The number of features for this classifier is restricted to ", self.max_num_features)
-        if len(np.unique(y)) > self.max_num_classes:
-            raise ValueError("The number of classes for this classifier is restricted to ", self.max_num_classes)
+        
+        #EDIT RUNDEL
+        if isinstance(y, np.ndarray):
+            if len(np.unique(y)) > self.max_num_classes:
+                raise ValueError("The number of classes for this classifier is restricted to ", self.max_num_classes)
+        else:
+            if torch.unique(y).size(dim=0) > self.max_num_classes:
+                raise ValueError("The number of classes for this classifier is restricted to ", self.max_num_classes)
+
         if X.shape[0] > 1024 and not overwrite_warning:
             raise ValueError("⚠️ WARNING: TabPFN is not made for datasets with a trainingsize > 1024. Prediction might take a while, be less reliable. We advise not to run datasets > 10k samples, which might lead to your machine crashing (due to quadratic memory scaling of TabPFN). Please confirm you want to run by passing overwrite_warning=True to the fit function.")
             

@@ -1,5 +1,5 @@
 import sys
-#sys.path.append('/Users/davidrundel/git/tabpfn_iml/')
+sys.path.append('/Users/davidrundel/git/tabpfn_iml/')
 
 import pickle
 import torch
@@ -21,7 +21,7 @@ else:
 print(f"Using device: {DEVICE}")
 
 
-debug = False
+debug = True
 if debug:
     n_train = 32
     n_val = 8

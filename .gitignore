@@ -4,3 +4,4 @@
 .vscode/settings.json
 *.cpkt
 *.pkl
+experiments/context_optimization/results/intermediate_results
