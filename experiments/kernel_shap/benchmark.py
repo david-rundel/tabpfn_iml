@@ -1,3 +1,11 @@
+import os
+import sys
+
+current_script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_script_dir)
+module_dir = os.path.dirname(parent_dir)
+sys.path.append(module_dir)
+
 import numpy as np
 import pandas as pd
 import datetime
