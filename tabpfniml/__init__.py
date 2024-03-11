@@ -18,4 +18,4 @@ from .methods.loco import LOCO
 
 from .methods.sensitivity import Sensitivity
 
-from .datasets.datasets import dataset_iml
+from .datasets.datasets import dataset_iml, OpenMLData, ArrayData

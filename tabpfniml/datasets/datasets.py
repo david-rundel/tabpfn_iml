@@ -290,7 +290,6 @@ class OpenMLData(dataset_iml):
         self.X_df = self.df.drop(columns=['target'])
         self.y_df = self.df['target']
 
-        # Convert to numpy arrays for consistency with the ConsultingData class
         self.Xy = self.df.to_numpy()
         self.X = self.X_df.to_numpy()
         self.y = self.y_df.to_numpy()
@@ -336,7 +335,6 @@ class ArrayData(dataset_iml):
         self.X_df = self.df.drop(columns=['target'])
         self.y_df = self.df['target']
 
-        # Convert to numpy arrays for consistency with the ConsultingData class
         self.Xy = self.df.to_numpy()
         self.X = self.X_df.to_numpy()
         self.y = self.y_df.to_numpy()
