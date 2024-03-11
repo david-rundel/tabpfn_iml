@@ -83,7 +83,7 @@ from tabpfniml import ICE_PD
 
 # Datasets
 
-The IML methods can be applied using any dataset from the OpenML Benchmarking Suites. Alternatively, a new dataset instance that inherits from the `dataset_iml` class can be instantiated. Essentially, you only need to define the `__init__()` function. Please refer to [tabpfniml/datasets/datasets.py](tabpfniml/datasets/datasets.py) for the structure and necessary variables. The datasets needs to be a *.csv* file and the first columns needs to be the target and the other colums the features. Categorical features should have already been converted to integer or float values, e.g., by label encoding.
+The IML methods can be applied to any dataset from the OpenML Benchmarking Suites using the `OpenMLData` class. Alternatively, the convenience class `ArrayData` can be used to construct a dataset instance from any array that can be transformed into a pandas DataFrame. Moreover, a new dataset instance that inherits from the `dataset_iml` class can be instantiated. Essentially, you only need to define the `__init__()` function. Please refer to [tabpfniml/datasets/datasets.py](tabpfniml/datasets/datasets.py) for the structure and necessary variables. The datasets needs to be a *.csv* file and the first columns needs to be the target and the other colums the features. Categorical features should have already been converted to integer or float values, e.g., by label encoding.
 
 ```python
 from tabpfniml import dataset_iml
