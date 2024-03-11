@@ -1,6 +1,6 @@
 # Interpretable Machine Learning for TabPFN
 
-This repo contains all scripts for the standalone TabPFN interpretable ML package (\texttt{tabpfn_iml}).
+This repo contains all scripts for the standalone TabPFN interpretable ML package.
 
 The project revolves around [TabPFN](https://github.com/automl/TabPFN) with the corresponding [paper](https://arxiv.org/pdf/2207.01848.pdf).
 
