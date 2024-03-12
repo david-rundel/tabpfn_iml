@@ -273,10 +273,10 @@ class OpenMLData(dataset_iml):
             le = LabelEncoder()
             y = le.fit_transform(y)
 
-            return dataset.name, X, y, categorical_features_idx, attribute_names
+            return dataset.name, X, y, categorical_features_idx, attribute_names, dataset.default_target_attribute
 
         # Set attributes directly without relying on a file path
-        name, X, y, categorical_features_idx, feature_names = fetch_openml_dataset(
+        name, X, y, categorical_features_idx, feature_names, target_name = fetch_openml_dataset(
             openml_id)
 
         self.id = 1
@@ -317,6 +317,8 @@ class OpenMLData(dataset_iml):
         # Set project_dir to current directory or any specific directory as a placeholder
         self.project_dir = Path.cwd()
         self.max_n_train = (1024 if not avoid_pruning else self.num_samples)
+
+        self.id_to_target_name = {self.id: target_name}
 
         # No need to call super().__init__() as we're directly initializing everything here
         # The original intent of calling super().__init__() was to load and process the file, which we've bypassed
