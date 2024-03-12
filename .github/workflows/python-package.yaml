@@ -26,3 +26,7 @@ jobs:
 
       - name: Build package
         run: python -m build
+
+      - name: Move distribution files to dist folder
+        run: |
+          mv dist/* dist/
