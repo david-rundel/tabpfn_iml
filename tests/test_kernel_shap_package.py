@@ -5,17 +5,19 @@ current_script_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_script_dir)
 sys.path.append(parent_dir)
 
-import pytest
-import itertools
-from tabpfniml.methods.kernel_shap_package import SHAP_Package_Wrapper
 import matplotlib
+from tabpfniml.datasets.datasets import OpenMLData
+from tabpfniml.methods.kernel_shap_package import SHAP_Package_Wrapper
+import itertools
+import pytest
+
 
 # Test Kernel SHAP Package Wrapper
-# Execute via: python -m pytest iml/tests/kernel_shap_package.py
+# Execute via: python -m pytest tests/kernel_shap_package.py
 
 # Define ranges for each parameter
 # Init-function  parameters
-init_values_data = [["", ""]] #TO BE SPECIFIED
+init_values_data = [770, 819]
 init_values_debug = [True]
 
 # Fit-function parameters
@@ -36,10 +38,10 @@ matplotlib.use('Agg')
 
 # Use itertools to generate all combinations of parameters
 configurations_init_fit = list(itertools.product(init_values_data,
-                                        init_values_debug,
-                                        fit_values_approximate_marginalization,
-                                        fit_values_log_odds_units,
-                                        fit_values_class_to_be_explained))
+                                                 init_values_debug,
+                                                 fit_values_approximate_marginalization,
+                                                 fit_values_log_odds_units,
+                                                 fit_values_class_to_be_explained))
 
 configurations_get = list(itertools.product(get_values_local,
                                             get_values_save_to_path))
@@ -47,10 +49,12 @@ configurations_plot = list(itertools.product(plot_values_test_index,
                                              plot_values_dependent_feature))
 
 # Test Function
+
+
 @pytest.mark.parametrize('config', configurations_init_fit)
 def test_your_function(config):
     try:
-        temp_shap = SHAP_Package_Wrapper(data=config[0],
+        temp_shap = SHAP_Package_Wrapper(data=OpenMLData(openml_id=config[0]),
                                          debug=config[1])
         temp_shap.fit(approximate_marginalization=config[2],
                       log_odds_units=config[3],
@@ -59,7 +63,7 @@ def test_your_function(config):
         for config_get in configurations_get:
             temp_shap.get_SHAP_values(local=config_get[0],
                                       save_to_path=config_get[1])
-            
+
         for config_plot in configurations_plot:
             temp_shap.plot_force(test_index=config_plot[0])
             temp_shap.plot_summary()
