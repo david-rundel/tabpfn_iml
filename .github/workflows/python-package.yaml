@@ -9,12 +9,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
@@ -27,6 +30,5 @@ jobs:
       - name: Build package
         run: python -m build
 
-      - name: Move distribution files to dist folder
-        run: |
-          mv dist/* dist/
+      - name: Commit new distribution files to repo
+        uses: stefanzweifel/git-auto-commit-action@v5
