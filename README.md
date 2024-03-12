@@ -23,7 +23,7 @@ This package provides the following methods:
 | Individual Conditional Expectation (ICE) curves | `tabpfniml/methods/ice_pd.py`         | Local           |
 | Partial Dependence (PD) plots                | `tabpfniml/methods/ice_pd.py`          | Global          |
 | Accumulated Local Effects (ALE) plots        | `tabpfniml/methods/ale.py`             | Local           |
-| Kernel SHAP                                  | `tabpfniml/methods/kernel_shap.py`     | Local & Global  |
+| Kernel SHAP                                  | `tabpfniml/methods/kernel_shap.py` & `tabpfniml/methods/kernel_shap_package.py`     | Local & Global  |
 | Sensitivity Analysis                         | `tabpfniml/methods/sensitivity.py`     | Local & Global  |
 
 
