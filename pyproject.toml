@@ -21,7 +21,6 @@ dependencies=[
         'mapie>=0.6.5', 
         'shap>=0.41.0',
         'pandas>=1.5.3',
-        'lightgbm>=4.0.0',
         'seaborn>=0.12.2',
         'gower>=0.1.2',
         'pymoo==0.6.0.1',

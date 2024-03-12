@@ -28,6 +28,15 @@ from tabpfniml.methods.ice_pd import ICE_PD
 from tabpfniml.methods.ale import ALE
 from tabpfniml.datasets.datasets import ArrayData, OpenMLData
 
+"""
+Python script to conduct the numerical experiments outlined in section '4.1 ICE & PD' of the paper.
+With the goal of comparing the runtime of the PDP and ALE implementations of tabpfn_iml with the scikit-learn
+implementations, the experiments are conducted on synthetic and openml datasets.
+
+The script saves the results in the 'experiments/ice_pd/results' directory, which can then be processed
+using 'experiments/ice_pd/analyze_results_ice_pd.py'.
+"""
+
 N = 1000
 
 N_TRAIN = round(0.8 * N)
