@@ -98,8 +98,8 @@ class myOwnData(dataset_iml):
 
 All experiments conducted in the paper can be found in this repository, enabling the straightforward replication.
 
-| Experiment                 | Paper Section    | Directory                            |
-|----------------------------|------------------|--------------------------------------|
-| ICE & PD                   | 4.1              | `experiments/ice_pd`                 |
-| Kernel SHAP                | 4.2              | `experiments/kernel_shap`            |
-| Context Optimization       | 4.3              | `experiments/context_optimization`   |
+| Experiment                 | Paper Section    | Directory                            | Comments                                             |
+|----------------------------|------------------|--------------------------------------|------------------------------------------------------|
+| ICE & PD                   | 4.1              | `experiments/ice_pd`                 | OpenML dataset ids: 11, 15, 31, 1049, 37, 40982, 1494|
+| Kernel SHAP                | 4.2              | `experiments/kernel_shap`            |                                                      |
+| Context Optimization       | 4.3              | `experiments/context_optimization`   |                                                      |
