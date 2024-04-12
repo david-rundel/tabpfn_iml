@@ -11,7 +11,7 @@ To account for the peculiarities of TabPFN, many methods are implemented from sc
 - [`dcurves`](https://github.com/ddsjoberg/dcurves) by Daniel Sjoberg and collaborators.
 - [`MAPIE`](https://github.com/scikit-learn-contrib/MAPIE) by Vianney Taquet, Grégoire Martinon and collaborators.
 
-Moreover, within [tabpfniml/tabpfn_interpret](tabpfniml/tabpfn_interpret), it contains a modified copy of the [TabPFN](https://github.com/automl/TabPFN) code.
+Moreover, within [tabpfniml/tabpfn_interpret](tabpfniml/tabpfn_interpret), it contains a modified copy of the [TabPFN](https://github.com/automl/TabPFN) code. No modifications have been done that affect the inner workings of TabPFN or the predictions, however, in order to extract gradient information for our IML methods, the preprocessing steps (not differentiable in the original implementation) have been adapted and hooks have been added.
 
 **A demo notebook, containing examples of all methods available in this package, is located at** [demo/tabpfniml_demo_notebook.ipynb](demo/tabpfniml_demo_notebook.ipynb).
 
