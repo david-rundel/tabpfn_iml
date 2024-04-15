@@ -57,6 +57,7 @@ This package provides the following methods:
 | Conformal Prediction                  | `tabpfniml/methods/conformal_pred.py` | Local   |
 
 
+For a detailed discussion of other available Transformer IML methods and their shortcomings w.r.t. TabPFN, refer to [this markdown file](TransformerIML.md).
 
 # Setup
 
