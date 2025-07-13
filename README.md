@@ -1,10 +1,27 @@
 # Interpretable Machine Learning for TabPFN
 
-This repo contains all scripts for the standalone TabPFN interpretable ML package.
+> ⚠️ **This repository is no longer maintained.**  
+> It is provided as-is for reference purposes only.
 
-The project revolves around [TabPFN](https://github.com/automl/TabPFN) with the corresponding [paper](https://arxiv.org/pdf/2207.01848.pdf).
+This repository contains all scripts for the standalone **tabpfn_iml** package. It is the **official implementation** of the paper:
 
-This package is an extensive and easy-to-use toolbox of interpretability methods to be used in conjunction with TabPFN. It aims at leveraging TabPFN, which inherently possesses high predictive power, to explain its predictions.
+**"Interpretable Machine Learning for TabPFN"** by David Rundel, Julius Kobialka, Constantin von Crailsheim, Matthias Feurer, Thomas Nagler, and David Rügamer  
+📄 [Springer Link](https://link.springer.com/chapter/10.1007/978-3-031-63797-1_23)
+
+For citations, please use the following BibTeX:
+
+```bibtex
+@inproceedings{rundel2024interpretable,
+  title={Interpretable machine learning for TabPFN},
+  author={Rundel, David and Kobialka, Julius and von Crailsheim, Constantin and Feurer, Matthias and Nagler, Thomas and R{\"u}gamer, David},
+  booktitle={World Conference on Explainable Artificial Intelligence},
+  pages={465--476},
+  year={2024},
+  organization={Springer}
+}
+```
+
+The package revolves around [TabPFN](https://arxiv.org/pdf/2207.01848.pdf) and is an extensive and easy-to-use toolbox of interpretability methods to be used in conjunction with TabPFN. It aims at leveraging TabPFN, which inherently possesses high predictive power, to explain its predictions.
 
 To account for the peculiarities of TabPFN, many methods are implemented from scratch, as a significant speedup relative to existing open-source implementations could be achieved. For some methods, this package relies on packages by others, in particular: 
 - [`shap`](https://github.com/shap/shap) by Scott Lundberg and collaborators.
